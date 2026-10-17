@@ -8,6 +8,7 @@ import br.com.cuida.ligacao.model.Ligacao;
 import br.com.cuida.ligacao.model.MotivosDeFalha;
 import br.com.cuida.ligacao.model.OrigemLigacao;
 import br.com.cuida.ligacao.model.StatusLigacao;
+import br.com.cuida.ligacao.model.TentativasEsgotadas;
 import br.com.cuida.questionario.QuestionarioService;
 import java.time.Duration;
 import java.time.Instant;
@@ -19,6 +20,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -37,13 +39,16 @@ class PlanejadorDeRetentativas {
   private final AcessoIdosoService acessoIdosoService;
   private final QuestionarioService questionarioService;
   private final TransactionTemplate transactions;
+  private final ApplicationEventPublisher events;
 
   PlanejadorDeRetentativas(
       LigacaoRepository ligacaoRepository,
       AgendaService agendaService,
       AcessoIdosoService acessoIdosoService,
       QuestionarioService questionarioService,
-      TransactionTemplate transactions) {
+      TransactionTemplate transactions,
+      ApplicationEventPublisher events) {
+    this.events = events;
     this.ligacaoRepository = ligacaoRepository;
     this.agendaService = agendaService;
     this.acessoIdosoService = acessoIdosoService;
@@ -71,6 +76,7 @@ class PlanejadorDeRetentativas {
   private Optional<UUID> planAfter(Ligacao previous) {
     if (previous.getStatus() == StatusLigacao.FAILED
         && !MotivosDeFalha.isRetryable(previous.getFailureReason())) {
+      close(previous, false);
       return Optional.empty();
     }
     Optional<AgendaDTO> schedule =
@@ -79,9 +85,12 @@ class PlanejadorDeRetentativas {
         acessoIdosoService
             .find(previous.getElderlyId())
             .filter(e -> e.active() && e.recordingConsent());
-    if (schedule.isEmpty()
-        || elderly.isEmpty()
-        || previous.getAttempt() >= schedule.get().maxAttempts()) {
+    if (schedule.isEmpty() || elderly.isEmpty()) {
+      close(previous, false);
+      return Optional.empty();
+    }
+    if (previous.getAttempt() >= schedule.get().maxAttempts()) {
+      close(previous, true);
       return Optional.empty();
     }
     Instant endedAt =
@@ -95,12 +104,48 @@ class PlanejadorDeRetentativas {
             previous.getLocalDate(),
             previous.getAttempt() + 1,
             questionarioService.snapshot(previous.getElderlyId()));
-    transactions.executeWithoutResult(status -> ligacaoRepository.saveAndFlush(retry));
+    transactions.executeWithoutResult(
+        status -> {
+          ligacaoRepository.saveAndFlush(retry);
+          ligacaoRepository
+              .findById(previous.getId())
+              .ifPresent(
+                  p -> {
+                    p.closeRetries();
+                    ligacaoRepository.saveAndFlush(p);
+                  });
+        });
     log.info(
         "Retentativa {} (tentativa {}) agendada para {}",
         retry.getId(),
         retry.getAttempt(),
         retryAt);
     return Optional.of(retry.getId());
+  }
+
+  /**
+   * Fecha a tentativa para não ser reavaliada a cada minuto. Se foi a última do dia sem contato,
+   * publica {@link TentativasEsgotadas} (uma única vez, na mesma transação).
+   */
+  private void close(Ligacao previous, boolean exhausted) {
+    transactions.executeWithoutResult(
+        status ->
+            ligacaoRepository
+                .findById(previous.getId())
+                .filter(p -> !p.isRetryClosed())
+                .ifPresent(
+                    p -> {
+                      p.closeRetries();
+                      ligacaoRepository.saveAndFlush(p);
+                      if (exhausted) {
+                        events.publishEvent(
+                            new TentativasEsgotadas(
+                                p.getElderlyId(), p.getLocalDate(), p.getAttempt(), p.getId()));
+                        log.info(
+                            "Tentativas do dia {} esgotadas para o idoso {}",
+                            p.getLocalDate(),
+                            p.getElderlyId());
+                      }
+                    }));
   }
 }

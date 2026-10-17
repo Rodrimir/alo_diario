@@ -22,6 +22,7 @@ import br.com.cuida.ligacao.model.LigacaoDTO;
 import br.com.cuida.ligacao.model.LigacaoResponseDTO;
 import br.com.cuida.ligacao.model.ResumoFormatadoDTO;
 import br.com.cuida.ligacao.model.StatusLigacao;
+import br.com.cuida.notificacao.NotificacaoService;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -40,6 +41,7 @@ class CalendarioService {
 
   private final AcessoIdosoService acessoIdosoService;
   private final FormatadorDeResumo formatadorDeResumo;
+  private final NotificacaoService notificacaoService;
   private final ConsultaLigacaoService consultaLigacaoService;
   private final GravacaoService gravacaoService;
   private final AuditoriaService auditoriaService;
@@ -49,12 +51,14 @@ class CalendarioService {
   CalendarioService(
       AcessoIdosoService acessoIdosoService,
       FormatadorDeResumo formatadorDeResumo,
+      NotificacaoService notificacaoService,
       ConsultaLigacaoService consultaLigacaoService,
       GravacaoService gravacaoService,
       AuditoriaService auditoriaService,
       UsuarioLogadoService usuarioLogadoService,
       Clock clock) {
     this.formatadorDeResumo = formatadorDeResumo;
+    this.notificacaoService = notificacaoService;
     this.acessoIdosoService = acessoIdosoService;
     this.consultaLigacaoService = consultaLigacaoService;
     this.gravacaoService = gravacaoService;
@@ -135,7 +139,8 @@ class CalendarioService {
         call.audioPurged(),
         formatted == null ? null : formatted.checklist(),
         formatted == null ? null : formatted.familyMessage(),
-        formatted == null ? null : formatted.report());
+        formatted == null ? null : formatted.report(),
+        notificacaoService.ultimoResumo(call.id(), zone).orElse(null));
   }
 
   TranscricaoResponseDTO transcript(UUID callId, String ip) {

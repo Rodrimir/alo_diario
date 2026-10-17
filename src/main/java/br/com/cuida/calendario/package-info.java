@@ -13,7 +13,9 @@
       "gravacao",
       "gravacao :: model",
       "auditoria",
-      "auditoria :: model"
+      "auditoria :: model",
+      "notificacao",
+      "notificacao :: model"
     })
 package br.com.cuida.calendario;
 

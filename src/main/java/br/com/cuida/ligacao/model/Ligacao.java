@@ -114,6 +114,10 @@ public class Ligacao extends EntidadeAuditavel {
   @Column(name = "failure_reason", length = 200)
   private String failureReason;
 
+  /** Esta tentativa já foi avaliada e não gera outra (retentativa criada ou encerrada). */
+  @Column(name = "retry_closed", nullable = false)
+  private boolean retryClosed;
+
   @Version
   @Column(nullable = false)
   private long version;
@@ -148,6 +152,15 @@ public class Ligacao extends EntidadeAuditavel {
         new Ligacao(elderlyId, OrigemLigacao.SCHEDULED, scheduledFor, localDate, 1, null);
     call.fail(failureReason, scheduledFor);
     return call;
+  }
+
+  /** Marca que esta tentativa não gera outra: o planejador de retentativas não a olha mais. */
+  public void closeRetries() {
+    this.retryClosed = true;
+  }
+
+  public boolean isRetryClosed() {
+    return retryClosed;
   }
 
   public boolean isActive() {

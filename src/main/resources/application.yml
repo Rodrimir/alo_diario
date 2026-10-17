@@ -126,6 +126,18 @@ app:
       allowed-hosts: ${APP_RECORDING_ALLOWED_HOSTS:storage.vapi.ai,*.vapi.ai}
       # classpath: só faz sentido com o gateway mock (gravação de exemplo).
       allow-classpath: ${APP_RECORDING_ALLOW_CLASSPATH:false}
+  notifications:
+    # mock (padrão: só registra no log) | whatsapi (envia pelo whats-api da equipe)
+    provider: ${NOTIFICATIONS_PROVIDER:mock}
+    whatsapi:
+      base-url: ${WHATSAPI_BASE_URL:}
+      # api_key da empresa no whats-api (resolve o número de origem).
+      api-key: ${WHATSAPI_API_KEY:}
+      language-code: ${WHATSAPI_LANGUAGE_CODE:pt_BR}
+    templates:
+      resumo: ${WHATSAPI_TEMPLATE_RESUMO:alo_diario_resumo}
+      sem-contato: ${WHATSAPI_TEMPLATE_SEM_CONTATO:alo_diario_sem_contato}
+      alerta: ${WHATSAPI_TEMPLATE_ALERTA:alo_diario_alerta}
   retention:
     audio-days: ${APP_RETENTION_AUDIO_DAYS:90}
     webhook-payload-days: ${APP_RETENTION_WEBHOOK_PAYLOAD_DAYS:7}

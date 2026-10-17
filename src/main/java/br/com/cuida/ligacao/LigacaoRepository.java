@@ -68,12 +68,13 @@ interface LigacaoRepository extends JpaRepository<Ligacao, UUID> {
       """)
   int recordProvider(UUID id, String provider, String providerCallId);
 
-  /** Tentativas automáticas sem sucesso e ainda sem a tentativa seguinte. */
+  /** Tentativas automáticas sem sucesso, ainda não avaliadas pelo planejador de retentativas. */
   @Query(
       """
       select c from Ligacao c
        where c.trigger <> br.com.cuida.ligacao.model.OrigemLigacao.MANUAL
          and c.localDate >= :since
+         and c.retryClosed = false
          and c.status in (br.com.cuida.ligacao.model.StatusLigacao.NO_ANSWER,
                           br.com.cuida.ligacao.model.StatusLigacao.BUSY,
                           br.com.cuida.ligacao.model.StatusLigacao.FAILED)

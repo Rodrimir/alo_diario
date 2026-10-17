@@ -46,6 +46,30 @@ public final class TestData {
     return callId;
   }
 
+  /** Idoso com consentimento e com o WhatsApp do responsável (quem recebe o resumo). */
+  public static UUID createElderlyWithGuardian(
+      ApiTestClient api, String token, String phone, String guardianWhatsapp) {
+    MvcTestResult result =
+        api.post(
+            token,
+            "/api/elderly",
+            """
+            {"name": "Maria da Silva", "preferredName": "Dona Maria", "phoneNumber": "%s",
+             "guardianName": "Ana", "guardianWhatsapp": "%s"}
+            """
+                .formatted(phone, guardianWhatsapp));
+    assertThat(result).hasStatus(HttpStatus.OK);
+    UUID id = UUID.fromString(ApiTestClient.read(result, "$.id"));
+    assertThat(api.put(token, "/api/elderly/{id}/consent", "{\"recordingConsent\": true}", id))
+        .hasStatus(HttpStatus.OK);
+    return id;
+  }
+
+  /** Um WhatsApp brasileiro aleatório em E.164, para isolar os testes que usam o fake. */
+  public static String randomWhatsapp() {
+    return "+55119" + String.format("%08d", new java.util.Random().nextInt(100_000_000));
+  }
+
   public static UUID createElderlyWithConsent(ApiTestClient api, String token, String phone) {
     UUID id = createElderly(api, token, phone);
     assertThat(api.put(token, "/api/elderly/{id}/consent", "{\"recordingConsent\": true}", id))

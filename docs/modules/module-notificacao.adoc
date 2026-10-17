@@ -1,0 +1,39 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Avisos à família pelo WhatsApp: resumo do dia, "não conseguimos falar" e alerta urgente. O envio passa pela API de WhatsApp da equipe (whats-api), com templates aprovados pela Meta.
+|Base package
+|`br.com.cuida.notificacao`
+|Spring components
+|_Services_
+
+* `b.c.c.n.NotificacaoService` -- Avisa a família pelo WhatsApp: o resumo de cada ligação processada e o "não conseguimos falar" quando as tentativas do dia acabam. Cada aviso é registrado antes do envio, com uma chave única que impede envio duplicado (o outbox pode entregar o mesmo evento mais de uma vez).
+* `b.c.c.n.WhatsAppService` (via `b.c.c.n.WhatsApiService` -- Envio real pelo whats-api da equipe: `POST /api/messages/template` com a `api_key` da empresa (que já resolve o número de origem e conta como admin, exigido para template).  
++
+Sem retry aqui (o `b.c.c.n.ReenvioNotificacaoJob` tenta de novo); circuit breaker para não insistir com o whats-api fora do ar.)
+* `b.c.c.n.WhatsAppService` (via `b.c.c.n.WhatsAppSimuladoService` -- Envio simulado (padrão no dev, sem chave): não manda nada, só registra no log o template e os parâmetros. O texto completo fica salvo na notificação e aparece na API.)
+
+_Configuration properties_
+
+* `b.c.c.n.NotificacaoProperties` -- Avisos à família pelo WhatsApp.
+|Bean references
+|* `b.c.c.l.ConsultaLigacaoService` (in Ligação) -- Consultas de ligações para os outros módulos (API pública).
+* `b.c.c.i.AcessoIdosoService` (in Idoso) -- API pública do módulo para os demais: consulta de idosos e checagem de acesso.  
++
+Idoso de outro tutor responde 404 (não 403), para não revelar que ele existe.
+* `b.c.c.l.FormatadorDeResumo` (in Ligação) -- Monta o resumo no formato do pitch, usado na tela e na mensagem para a família:  <pre> ALÔ DIÁRIO – Dona Maria Data: 17/10 ✅ Está bem ⚠️ Relatou dor no joelho Recado: "Vou ao médico na segunda-feira." </pre>  A pergunta do recado ({@value #FAMILY_MESSAGE_KEY}) não entra no checklist: vira a linha "Recado".
+* `b.c.c.l.LigacaoProperties` (in Ligação) -- Regras do ciclo de ligações.
+|Aggregate roots
+|* `b.c.c.n.model.Notificacao` -- Um aviso à família. A `dedupKey` única garante que o mesmo aviso não seja enviado duas vezes, mesmo com o evento reprocessado pelo outbox.
+|Events listened to
+|* `b.c.c.l.model.LigacaoProcessada` (async) 
+* `b.c.c.l.model.TentativasEsgotadas` (async) 
+|Properties
+|* `app.notifications.provider` -- `java.lang.String`, default `mock`. `mock` (padrão: só registra no log) ou `whatsapi`
+* `app.notifications.templates.alerta` -- `java.lang.String`, default `alo_diario_alerta`
+* `app.notifications.templates.resumo` -- `java.lang.String`, default `alo_diario_resumo`
+* `app.notifications.templates.sem-contato` -- `java.lang.String`, default `alo_diario_sem_contato`
+* `app.notifications.whatsapi.api-key` -- `java.lang.String`. `api_key` da empresa no whats-api (`WHATSAPI_API_KEY`)
+* `app.notifications.whatsapi.base-url` -- `java.lang.String`. endereço do whats-api (`WHATSAPI_BASE_URL`)
+* `app.notifications.whatsapi.language-code` -- `java.lang.String`, default `pt_BR`. idioma dos templates
+|===

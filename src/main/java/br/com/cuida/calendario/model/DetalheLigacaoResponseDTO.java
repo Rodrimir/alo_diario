@@ -5,6 +5,7 @@ import br.com.cuida.ligacao.model.NivelAlerta;
 import br.com.cuida.ligacao.model.OrigemLigacao;
 import br.com.cuida.ligacao.model.ResumoLigacao;
 import br.com.cuida.ligacao.model.StatusLigacao;
+import br.com.cuida.notificacao.model.NotificacaoResponseDTO;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +20,8 @@ import java.util.UUID;
  * @param checklist uma linha ✅/⚠️/❔ por pergunta ({@code null} enquanto não processada)
  * @param familyMessage recado da pessoa para a família
  * @param report resumo pronto no formato do pitch (o mesmo texto enviado à família)
+ * @param notification último envio do resumo ao WhatsApp do responsável ({@code null} se ainda não
+ *     houve)
  */
 public record DetalheLigacaoResponseDTO(
     UUID id,
@@ -41,4 +44,5 @@ public record DetalheLigacaoResponseDTO(
     boolean audioPurged,
     List<ItemChecklistDTO> checklist,
     String familyMessage,
-    String report) {}
+    String report,
+    NotificacaoResponseDTO notification) {}

@@ -7,6 +7,7 @@ import br.com.cuida.infra.security.UsuarioLogadoService;
 import br.com.cuida.ligacao.model.Ligacao;
 import br.com.cuida.ligacao.model.LigacaoDTO;
 import br.com.cuida.ligacao.model.LigacaoEncerrada;
+import br.com.cuida.ligacao.model.LigacaoProcessada;
 import br.com.cuida.ligacao.model.OrigemTranscricao;
 import br.com.cuida.ligacao.model.ResumoLigacao;
 import java.time.Instant;
@@ -52,8 +53,11 @@ public class ProcessamentoLigacaoService {
     require(callId).attachTranscript(transcript, source);
   }
 
+  /** Grava o resumo (PROCESSED) e publica {@link LigacaoProcessada} para avisar a família. */
   public void complete(UUID callId, ResumoLigacao summary) {
-    require(callId).markProcessed(summary);
+    Ligacao call = require(callId);
+    call.markProcessed(summary);
+    events.publishEvent(new LigacaoProcessada(call.getId(), call.getElderlyId()));
   }
 
   public void fail(UUID callId, String reason) {

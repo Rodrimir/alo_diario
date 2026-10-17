@@ -1,0 +1,10 @@
+### Rode antes 01 a 03 (salvam {{token}} e {{callId}}). O idoso precisa ter guardianWhatsapp.
+### No dev o envio é simulado (NOTIFICATIONS_PROVIDER=mock): o texto aparece aqui e no log.
+
+### Avisos enviados à família sobre a ligação (resumo, sem contato, alerta)
+GET {{baseUrl}}/api/calls/{{callId}}/notifications
+Authorization: Bearer {{token}}
+
+### Reenviar o resumo ao WhatsApp do responsável
+POST {{baseUrl}}/api/calls/{{callId}}/notifications/resend
+Authorization: Bearer {{token}}

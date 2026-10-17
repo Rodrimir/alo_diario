@@ -126,6 +126,23 @@ class AgendamentoDeLigacoesIT {
     endAs(retry.getId(), "customer-busy", MONDAY_9AM.plusSeconds(1300));
     assertThat(ours(planejadorDeRetentativas.planRetries(MONDAY_9AM.plusSeconds(1400)), elderlyId))
         .isEmpty();
+    assertThat(ours(planejadorDeRetentativas.planRetries(MONDAY_9AM.plusSeconds(1500)), elderlyId))
+        .isEmpty();
+
+    // A última tentativa do dia sem contato gera um único aviso "não conseguimos falar".
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () ->
+                assertThat(
+                        jdbc.queryForList(
+                            "select status from notifications"
+                                + " where elderly_id = ? and kind = 'NO_CONTACT'",
+                            String.class,
+                            elderlyId))
+                    .containsExactly("SKIPPED"));
+    assertThat(LigacaoTestSupport.reload(ligacaoRepository, retry.getId()).isRetryClosed())
+        .isTrue();
   }
 
   @Test
