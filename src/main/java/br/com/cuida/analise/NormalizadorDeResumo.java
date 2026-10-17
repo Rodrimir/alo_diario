@@ -1,10 +1,12 @@
 package br.com.cuida.analise;
 
+import br.com.cuida.ligacao.FormatadorDeResumo;
 import br.com.cuida.ligacao.model.ClarezaResposta;
 import br.com.cuida.ligacao.model.Humor;
 import br.com.cuida.ligacao.model.NivelAlerta;
 import br.com.cuida.ligacao.model.RespostaAtributo;
 import br.com.cuida.ligacao.model.ResumoLigacao;
+import br.com.cuida.ligacao.model.StatusResposta;
 import br.com.cuida.questionario.model.QuestionarioSnapshot;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -27,7 +29,10 @@ import org.springframework.stereotype.Component;
  *       {@code NOT_ASKED}; chaves inventadas são descartadas);
  *   <li>{@code alertReasons} vazio quando o nível é {@code NONE};
  *   <li>rede de segurança: se a fala da pessoa menciona queda, dor no peito, falta de ar ou pedido
- *       de ajuda e o modelo disse {@code NONE}, sobe para {@code ATTENTION} pedindo confirmação.
+ *       de ajuda ou golpe e o modelo disse {@code NONE}, sobe para {@code ATTENTION} pedindo
+ *       confirmação;
+ *   <li>status do checklist ausente vira {@code UNKNOWN}; o recado vem do modelo ou da resposta à
+ *       pergunta {@code message_for_family}.
  * </ul>
  *
  * Depois valida com Jakarta Validation; resumo inválido lança {@link ResumoInvalidoException}.
@@ -36,14 +41,20 @@ import org.springframework.stereotype.Component;
 class NormalizadorDeResumo {
 
   private static final Map<String, String> RED_FLAGS =
-      Map.of(
-          "cai ", "queda",
-          "caí", "queda",
-          "queda", "queda",
-          "dor no peito", "dor no peito",
-          "falta de ar", "falta de ar",
-          "socorro", "pedido de ajuda",
-          "me ajuda", "pedido de ajuda");
+      Map.ofEntries(
+          Map.entry("cai ", "queda"),
+          Map.entry("caí", "queda"),
+          Map.entry("queda", "queda"),
+          Map.entry("dor no peito", "dor no peito"),
+          Map.entry("falta de ar", "falta de ar"),
+          Map.entry("socorro", "pedido de ajuda"),
+          Map.entry("me ajuda", "pedido de ajuda"),
+          Map.entry("golpe", "possível tentativa de golpe"),
+          Map.entry(" pix", "possível tentativa de golpe"),
+          Map.entry("senha", "possível tentativa de golpe"),
+          Map.entry("pediram dinheiro", "possível tentativa de golpe"),
+          Map.entry("pedindo dinheiro", "possível tentativa de golpe"),
+          Map.entry("sequestr", "possível tentativa de golpe"));
 
   private final Validator validator;
 
@@ -63,15 +74,7 @@ class NormalizadorDeResumo {
     List<RespostaAtributo> answers = new ArrayList<>();
     for (QuestionarioSnapshot.Item item : questionnaire.items()) {
       RespostaAtributo answer = byKey.get(item.attributeKey());
-      answers.add(
-          answer == null
-              ? new RespostaAtributo(
-                  item.attributeKey(), item.questionText(), "", ClarezaResposta.NOT_ASKED)
-              : new RespostaAtributo(
-                  item.attributeKey(),
-                  item.questionText(),
-                  truncate(answer.answer() == null ? "" : answer.answer(), 500),
-                  answer.clarity() == null ? ClarezaResposta.PARTIAL : answer.clarity()));
+      answers.add(answer == null ? notAsked(item) : normalize(answer, item));
     }
 
     NivelAlerta level = raw.alertLevel() == null ? NivelAlerta.NONE : raw.alertLevel();
@@ -97,7 +100,8 @@ class NormalizadorDeResumo {
             clean(raw.notableMentions()),
             level,
             reasons,
-            raw.followUpSuggested() || level != NivelAlerta.NONE);
+            raw.followUpSuggested() || level != NivelAlerta.NONE,
+            familyMessage(raw, answers));
     Set<ConstraintViolation<ResumoLigacao>> violations = validator.validate(normalized);
     if (!violations.isEmpty()) {
       throw new ResumoInvalidoException(
@@ -106,6 +110,55 @@ class NormalizadorDeResumo {
               .collect(Collectors.joining("; ")));
     }
     return normalized;
+  }
+
+  private static RespostaAtributo notAsked(QuestionarioSnapshot.Item item) {
+    return new RespostaAtributo(
+        item.attributeKey(),
+        item.questionText(),
+        "",
+        ClarezaResposta.NOT_ASKED,
+        StatusResposta.UNKNOWN,
+        null);
+  }
+
+  /**
+   * Sem status vindo do modelo, a resposta fica {@code UNKNOWN} (❔): melhor mostrar "sem
+   * informação" do que um ✅ que ninguém confirmou.
+   */
+  private static RespostaAtributo normalize(
+      RespostaAtributo answer, QuestionarioSnapshot.Item item) {
+    String text = truncate(answer.answer() == null ? "" : answer.answer().trim(), 500);
+    ClarezaResposta clarity = answer.clarity() == null ? ClarezaResposta.PARTIAL : answer.clarity();
+    boolean unanswered =
+        text.isEmpty()
+            || clarity == ClarezaResposta.NOT_ASKED
+            || clarity == ClarezaResposta.NOT_ANSWERED;
+    StatusResposta status =
+        unanswered || answer.status() == null ? StatusResposta.UNKNOWN : answer.status();
+    String headline =
+        answer.headline() == null || answer.headline().isBlank()
+            ? null
+            : truncate(answer.headline().trim(), 80);
+    return new RespostaAtributo(
+        item.attributeKey(), item.questionText(), text, clarity, status, headline);
+  }
+
+  /**
+   * O recado vem do modelo; se ele não preencheu, usa a resposta à pergunta do recado, a menos que
+   * a pessoa tenha dito que não quer deixar recado.
+   */
+  private static String familyMessage(ResumoLigacao raw, List<RespostaAtributo> answers) {
+    if (raw.familyMessage() != null && !raw.familyMessage().isBlank()) {
+      return truncate(raw.familyMessage().trim(), 500);
+    }
+    return answers.stream()
+        .filter(a -> FormatadorDeResumo.FAMILY_MESSAGE_KEY.equals(a.attributeKey()))
+        .filter(a -> a.statusOrUnknown() != StatusResposta.UNKNOWN)
+        .map(RespostaAtributo::answer)
+        .filter(text -> !text.toLowerCase(Locale.ROOT).startsWith("não"))
+        .findFirst()
+        .orElse(null);
   }
 
   /** Procura sinais de alerta só nas falas da pessoa idosa. */

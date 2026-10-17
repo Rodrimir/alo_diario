@@ -9,8 +9,8 @@ import java.util.List;
 /**
  * Resumo estruturado de uma ligação, persistido em {@code calls.structured_summary} (jsonb).
  *
- * <p>O tipo pertence ao módulo {@code call} porque é ele quem guarda o dado; o módulo {@code
- * analysis} apenas o produz.
+ * <p>O tipo pertence ao módulo {@code ligacao} porque é ele quem guarda o dado; o módulo {@code
+ * analise} apenas o produz.
  *
  * @param overview 2–4 frases em linguagem simples
  * @param mood humor percebido
@@ -19,6 +19,7 @@ import java.util.List;
  * @param alertLevel nível de alerta
  * @param alertReasons motivos do alerta (vazio quando {@link NivelAlerta#NONE})
  * @param followUpSuggested se vale o tutor entrar em contato
+ * @param familyMessage recado da pessoa para a família ({@code null} se não houver)
  */
 public record ResumoLigacao(
     @NotBlank @Size(max = 800) String overview,
@@ -27,4 +28,5 @@ public record ResumoLigacao(
     @NotNull List<@NotBlank @Size(max = 300) String> notableMentions,
     @NotNull NivelAlerta alertLevel,
     @NotNull List<@NotBlank @Size(max = 300) String> alertReasons,
-    boolean followUpSuggested) {}
+    boolean followUpSuggested,
+    @Size(max = 500) String familyMessage) {}

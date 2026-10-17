@@ -26,6 +26,28 @@ class SegurancaIT {
   }
 
   @Test
+  void corsPreflightAllowsTheConfiguredFrontendOnly() {
+    MvcTestResult allowed =
+        mvc.options()
+            .uri("/api/elderly")
+            .header("Origin", "http://localhost:3000")
+            .header("Access-Control-Request-Method", "POST")
+            .header("Access-Control-Request-Headers", "Authorization, Content-Type")
+            .exchange();
+    MvcTestResult denied =
+        mvc.options()
+            .uri("/api/elderly")
+            .header("Origin", "https://site-estranho.com")
+            .header("Access-Control-Request-Method", "POST")
+            .exchange();
+
+    assertThat(allowed).hasStatusOk();
+    assertThat(allowed.getResponse().getHeader("Access-Control-Allow-Origin"))
+        .isEqualTo("http://localhost:3000");
+    assertThat(denied).hasStatus(HttpStatus.FORBIDDEN);
+  }
+
+  @Test
   void pingIsPublic() {
     MvcTestResult result = api.get(null, "/api/ping");
 

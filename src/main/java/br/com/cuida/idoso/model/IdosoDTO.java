@@ -9,6 +9,8 @@ import java.util.UUID;
  * @param preferredName como a pessoa gosta de ser chamada (pode ser {@code null})
  * @param phoneNumber telefone em E.164
  * @param zone fuso da pessoa idosa: base do calendário e da agenda
+ * @param guardianName responsável que recebe o resumo (pode ser {@code null})
+ * @param guardianWhatsapp WhatsApp do responsável em E.164 (pode ser {@code null})
  */
 public record IdosoDTO(
     UUID id,
@@ -18,7 +20,9 @@ public record IdosoDTO(
     String phoneNumber,
     ZoneId zone,
     boolean recordingConsent,
-    boolean active) {
+    boolean active,
+    String guardianName,
+    String guardianWhatsapp) {
 
   /** Nome usado na conversa: o apelido, se houver. */
   public String nameForConversation() {

@@ -23,6 +23,8 @@ app:
       # Administrador semeado no dev (credenciais locais, não são segredo).
       email: ${APP_BOOTSTRAP_ADMIN_EMAIL:admin@cuida.local}
       password: ${APP_BOOTSTRAP_ADMIN_PASSWORD:admin12345}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:*,http://127.0.0.1:*}
   storage:
     # MinIO do docker-compose (credenciais locais, não são segredo).
     s3:

@@ -10,11 +10,11 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * @param recoveryWindow quanto tempo depois do horário ainda vale ligar (app fora do ar)
  * @param stuckAfter sem relatório do provedor depois disso, a ligação é dada como falha
  * @param maxDurationSeconds duração máxima de uma ligação
- * @param assistantName nome com que a assistente se apresenta
+ * @param productName nome do produto, usado na apresentação da assistente e nos resumos
  */
 @ConfigurationProperties("app.calls")
 public record LigacaoProperties(
     @DefaultValue("PT2H") Duration recoveryWindow,
     @DefaultValue("PT30M") Duration stuckAfter,
     @DefaultValue("600") int maxDurationSeconds,
-    @DefaultValue("Cuida") String assistantName) {}
+    @DefaultValue("Alô Diário") String productName) {}

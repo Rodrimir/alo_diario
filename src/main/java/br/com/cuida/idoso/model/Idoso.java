@@ -46,6 +46,14 @@ public class Idoso extends EntidadeAuditavel {
   @Column(nullable = false)
   private boolean active = true;
 
+  /** Quem recebe o resumo diário (pode ser diferente do tutor). */
+  @Column(name = "guardian_name", length = 120)
+  private String guardianName;
+
+  /** WhatsApp do responsável em E.164; sem ele, o resumo não é enviado. */
+  @Column(name = "guardian_whatsapp", length = 16)
+  private String guardianWhatsapp;
+
   /** Exigido pelo JPA. */
   protected Idoso() {}
 
@@ -69,6 +77,19 @@ public class Idoso extends EntidadeAuditavel {
     this.timezone = ZoneId.of(timezone).getId();
     this.notes = blankToNull(notes);
     this.active = active;
+  }
+
+  public void updateGuardian(String name, String whatsapp) {
+    this.guardianName = blankToNull(name);
+    this.guardianWhatsapp = blankToNull(whatsapp);
+  }
+
+  public String getGuardianName() {
+    return guardianName;
+  }
+
+  public String getGuardianWhatsapp() {
+    return guardianWhatsapp;
   }
 
   /** Registra quem declarou (ou revogou) o consentimento de gravação e quando. */
@@ -124,6 +145,15 @@ public class Idoso extends EntidadeAuditavel {
 
   public IdosoDTO toDTO() {
     return new IdosoDTO(
-        getId(), tutorId, name, preferredName, phoneNumber, getZoneId(), recordingConsent, active);
+        getId(),
+        tutorId,
+        name,
+        preferredName,
+        phoneNumber,
+        getZoneId(),
+        recordingConsent,
+        active,
+        guardianName,
+        guardianWhatsapp);
   }
 }

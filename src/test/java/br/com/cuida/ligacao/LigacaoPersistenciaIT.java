@@ -11,6 +11,7 @@ import br.com.cuida.ligacao.model.OrigemLigacao;
 import br.com.cuida.ligacao.model.RespostaAtributo;
 import br.com.cuida.ligacao.model.ResumoLigacao;
 import br.com.cuida.ligacao.model.StatusLigacao;
+import br.com.cuida.ligacao.model.StatusResposta;
 import br.com.cuida.questionario.model.QuestionarioSnapshot;
 import br.com.cuida.questionario.model.TipoResposta;
 import br.com.cuida.testsupport.IntegrationTest;
@@ -55,12 +56,24 @@ class LigacaoPersistenciaIT {
             Humor.GOOD,
             List.of(
                 new RespostaAtributo(
-                    "sleep", "Dormiu bem?", "Sim, dormiu bem.", ClarezaResposta.CLEAR),
-                new RespostaAtributo("mood", "Como está o humor?", "", ClarezaResposta.NOT_ASKED)),
+                    "sleep",
+                    "Dormiu bem?",
+                    "Sim, dormiu bem.",
+                    ClarezaResposta.CLEAR,
+                    StatusResposta.OK,
+                    "Dormiu bem"),
+                new RespostaAtributo(
+                    "mood",
+                    "Como está o humor?",
+                    "",
+                    ClarezaResposta.NOT_ASKED,
+                    StatusResposta.UNKNOWN,
+                    null)),
             List.of("Vai receber a visita da neta."),
             NivelAlerta.NONE,
             List.of(),
-            false);
+            false,
+            "Mande um beijo para os netos.");
     call.recordSummary(summary);
     ligacaoRepository.save(call);
 
@@ -78,6 +91,40 @@ class LigacaoPersistenciaIT {
     assertThat(loaded.getStatus()).isEqualTo(StatusLigacao.SCHEDULED);
     assertThat(loaded.getVersion()).isZero();
     assertThat(mood).isEqualTo("GOOD");
+  }
+
+  /** Resumos gravados antes de status/headline/familyMessage existirem continuam legíveis. */
+  @Test
+  void readsSummariesStoredBeforeTheChecklistFields() {
+    UUID elderlyId = newElderly();
+    Ligacao call =
+        new Ligacao(
+            elderlyId,
+            OrigemLigacao.MANUAL,
+            Instant.parse("2026-10-16T12:00:00Z"),
+            LocalDate.of(2026, 10, 16),
+            1,
+            SNAPSHOT);
+    ligacaoRepository.saveAndFlush(call);
+    jdbc.update(
+        """
+        update calls set structured_summary = cast(? as jsonb) where id = ?
+        """,
+        """
+        {"overview": "Tudo bem.", "mood": "GOOD",
+         "answers": [{"attributeKey": "sleep", "question": "Dormiu bem?",
+                      "answer": "Sim", "clarity": "CLEAR"}],
+         "notableMentions": [], "alertLevel": "NONE", "alertReasons": [],
+         "followUpSuggested": false}
+        """,
+        call.getId());
+
+    ResumoLigacao loaded =
+        ligacaoRepository.findById(call.getId()).orElseThrow().getStructuredSummary();
+
+    assertThat(loaded.familyMessage()).isNull();
+    assertThat(loaded.answers().getFirst().status()).isNull();
+    assertThat(loaded.answers().getFirst().statusOrUnknown()).isEqualTo(StatusResposta.UNKNOWN);
   }
 
   @Test

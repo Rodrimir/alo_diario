@@ -8,6 +8,7 @@
 |* `b.c.c.i.AcessoIdosoService` (in Idoso) -- API pública do módulo para os demais: consulta de idosos e checagem de acesso.  
 +
 Idoso de outro tutor responde 404 (não 403), para não revelar que ele existe.
+* `b.c.c.l.FormatadorDeResumo` (in Ligação) -- Monta o resumo no formato do pitch, usado na tela e na mensagem para a família:  <pre> ALÔ DIÁRIO – Dona Maria Data: 17/10 ✅ Está bem ⚠️ Relatou dor no joelho Recado: "Vou ao médico na segunda-feira." </pre>  A pergunta do recado ({@value #FAMILY_MESSAGE_KEY}) não entra no checklist: vira a linha "Recado".
 * `b.c.c.l.ConsultaLigacaoService` (in Ligação) -- Consultas de ligações para os outros módulos (API pública).
 * `b.c.c.g.GravacaoService` (in Gravação) -- API pública do módulo: copia, lê e apaga gravações.
 * `b.c.c.a.AuditoriaService` (in Auditoria) -- Registra e consulta quem acessou resumo, transcrição ou áudio de um idoso (API pública).

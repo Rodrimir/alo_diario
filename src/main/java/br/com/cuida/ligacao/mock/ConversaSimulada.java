@@ -9,15 +9,17 @@ final class ConversaSimulada {
 
   private static final Map<String, String> ANSWERS =
       Map.of(
-          "sleep", "Dormi bem, acordei só uma vez para ir ao banheiro.",
+          "wellbeing", "Estou bem, só com um pouco de dor no joelho.",
           "medication", "Tomei sim, logo depois do café da manhã.",
-          "meals", "Comi pão com manteiga, café com leite e uma banana.",
-          "pain", "Só um pouquinho de dor no joelho, uns 2.",
-          "mood", "Estou animada hoje, o dia está bonito.",
-          "social_contact", "Minha neta vem me visitar à tarde.");
+          "sleep", "Dormi bem, acordei só uma vez.",
+          "needed_help", "Não, não precisei não.",
+          "suspicious_call", "Não, ninguém estranho ligou.",
+          "message_for_family", "Diga para minha filha que vou ao médico na segunda-feira.");
 
-  private static final String URGENT_PAIN =
-      "Ai, ontem à noite eu caí no banheiro e estou com uma dor forte no quadril, uns 5.";
+  private static final String URGENT_WELLBEING =
+      "Ai, ontem à noite eu caí no banheiro e estou com uma dor forte no quadril.";
+
+  private static final String URGENT_HELP = "Precisei sim, a vizinha teve que me levantar.";
 
   private ConversaSimulada() {}
 
@@ -28,9 +30,11 @@ final class ConversaSimulada {
     for (QuestionarioSnapshot.Item item : call.questionnaire().items()) {
       line(text, "AI", item.questionText());
       String answer =
-          scenario == CenarioSimulado.URGENT && item.attributeKey().equals("pain")
-              ? URGENT_PAIN
-              : ANSWERS.getOrDefault(item.attributeKey(), "Sim, está tudo certo.");
+          scenario == CenarioSimulado.URGENT && item.attributeKey().equals("wellbeing")
+              ? URGENT_WELLBEING
+              : scenario == CenarioSimulado.URGENT && item.attributeKey().equals("needed_help")
+                  ? URGENT_HELP
+                  : ANSWERS.getOrDefault(item.attributeKey(), "Sim, está tudo certo.");
       line(text, "User", answer);
     }
     if (scenario == CenarioSimulado.URGENT) {

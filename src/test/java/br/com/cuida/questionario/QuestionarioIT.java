@@ -6,6 +6,7 @@ import br.com.cuida.questionario.model.QuestionarioSnapshot;
 import br.com.cuida.testsupport.ApiTestClient;
 import br.com.cuida.testsupport.IntegrationTest;
 import br.com.cuida.testsupport.TestData;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -38,8 +39,11 @@ class QuestionarioIT {
 
   @Test
   void replaceKeepsIdsOfExistingKeysAndRemovesTheRest() {
-    String sleepId =
-        ApiTestClient.read(api.get(token, "/api/elderly/{id}/questionnaire", elderlyId), "$[0].id");
+    List<String> sleepIds =
+        ApiTestClient.read(
+            api.get(token, "/api/elderly/{id}/questionnaire", elderlyId),
+            "$[?(@.attributeKey == 'sleep')].id");
+    String sleepId = sleepIds.getFirst();
 
     MvcTestResult result =
         api.put(

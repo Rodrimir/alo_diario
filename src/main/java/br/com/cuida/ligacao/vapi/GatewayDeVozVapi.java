@@ -100,7 +100,7 @@ class GatewayDeVozVapi implements GatewayDeVoz {
     Map<String, Object> metadata = Map.of("callId", call.callId().toString());
 
     Map<String, Object> assistant = new LinkedHashMap<>();
-    assistant.put("name", "Cuida");
+    assistant.put("name", "Alô Diário");
     assistant.put("firstMessage", call.firstMessage());
     assistant.put("firstMessageMode", "assistant-speaks-first");
     assistant.put(

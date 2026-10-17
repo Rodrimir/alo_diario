@@ -37,7 +37,15 @@ class ResumidorOpenAi implements Resumidor {
       - overview: 2 a 4 frases simples sobre como a pessoa está hoje.
       - answers: uma entrada para CADA pergunta listada, com a mesma attributeKey. answer resume o \
       que a pessoa disse (vazio se não foi perguntado ou respondido). clarity: CLEAR, PARTIAL, \
-      NOT_ASKED ou NOT_ANSWERED.
+      NOT_ASKED ou NOT_ANSWERED. status: OK se a resposta é tranquilizadora, ATTENTION se merece \
+      atenção da família (não tomou remédio, dor, precisou de ajuda, contato suspeito), UNKNOWN \
+      se não foi respondida. headline: frase curta (até 80 caracteres) para um checklist, em \
+      terceira pessoa, ex.: "Tomou os medicamentos", "Relatou dor no joelho", "Nenhuma \
+      tentativa de golpe".
+      - familyMessage: o recado que a pessoa pediu para passar à família, com as palavras dela; \
+      vazio se não houve recado.
+      - Golpe: se a pessoa contar que alguém pediu dinheiro, pix, senha, dados ou disse ser \
+      parente em apuros, marque ATTENTION e explique em alertReasons.
       - mood: GOOD, NEUTRAL, LOW ou UNCLEAR.
       - notableMentions: fatos relevantes fora das perguntas (visitas, consultas, mudanças).
       - alertLevel: URGENT só se a pessoa relatar queda, dor forte, dor no peito, falta de ar, \

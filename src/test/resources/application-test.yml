@@ -32,3 +32,5 @@ app:
       directory: target/test-recordings
     download:
       allow-classpath: true
+  cors:
+    allowed-origins: http://localhost:3000

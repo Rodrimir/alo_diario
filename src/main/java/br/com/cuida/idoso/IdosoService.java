@@ -53,6 +53,7 @@ class IdosoService {
         timezone,
         request.notes(),
         request.active() == null || request.active());
+    elderly.updateGuardian(request.guardianName(), whatsapp(request.guardianWhatsapp()));
     idosoRepository.save(elderly);
     events.publishEvent(new IdosoCadastrado(elderly.getId()));
     return IdosoResponseDTO.of(elderly);
@@ -84,6 +85,7 @@ class IdosoService {
         timezone(request.timezone()),
         request.notes(),
         request.active() == null || request.active());
+    elderly.updateGuardian(request.guardianName(), whatsapp(request.guardianWhatsapp()));
     return IdosoResponseDTO.of(idosoRepository.saveAndFlush(elderly));
   }
 
@@ -120,6 +122,19 @@ class IdosoService {
             () ->
                 ValidacaoException.of(
                     "phoneNumber", "telefone inválido: informe DDD + número ou o formato +55..."));
+  }
+
+  /** WhatsApp do responsável é opcional; se vier, precisa ser um telefone válido. */
+  private static String whatsapp(String raw) {
+    if (raw == null || raw.isBlank()) {
+      return null;
+    }
+    return TelefoneNormalizado.toE164(raw)
+        .orElseThrow(
+            () ->
+                ValidacaoException.of(
+                    "guardianWhatsapp",
+                    "WhatsApp inválido: informe DDD + número ou o formato +55..."));
   }
 
   private static String timezone(String raw) {

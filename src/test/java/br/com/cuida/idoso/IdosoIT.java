@@ -62,6 +62,52 @@ class IdosoIT {
   }
 
   @Test
+  void storesTheGuardianWhoReceivesTheSummary() {
+    MvcTestResult created =
+        api.post(
+            token,
+            "/api/elderly",
+            """
+            {"name": "Maria", "phoneNumber": "11987654321",
+             "guardianName": "Ana (filha)", "guardianWhatsapp": "(11) 91234-5678"}
+            """);
+
+    assertThat(created).hasStatus(HttpStatus.OK);
+    assertThat(created).bodyJson().extractingPath("$.guardianName").isEqualTo("Ana (filha)");
+    assertThat(created).bodyJson().extractingPath("$.guardianWhatsapp").isEqualTo("+5511912345678");
+
+    MvcTestResult invalid =
+        api.post(
+            token,
+            "/api/elderly",
+            """
+            {"name": "Maria", "phoneNumber": "11987654321", "guardianWhatsapp": "123"}
+            """);
+    assertThat(invalid).hasStatus(HttpStatus.BAD_REQUEST);
+    assertThat(invalid)
+        .bodyJson()
+        .extractingPath("$.errors[0].field")
+        .isEqualTo("guardianWhatsapp");
+  }
+
+  @Test
+  void suggestedQuestionsAreThePitchOnes() {
+    UUID id = TestData.createElderly(api, token, "11987654321");
+
+    assertThat(api.get(token, "/api/elderly/{id}/questionnaire", id))
+        .bodyJson()
+        .extractingPath("$[*].attributeKey")
+        .asArray()
+        .containsExactly(
+            "wellbeing",
+            "medication",
+            "sleep",
+            "needed_help",
+            "suspicious_call",
+            "message_for_family");
+  }
+
+  @Test
   void invalidPhoneAndTimezoneAreFieldErrors() {
     MvcTestResult result =
         api.post(

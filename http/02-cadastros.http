@@ -1,6 +1,7 @@
 ### Rode antes o login em 01-auth.http (salva {{token}}).
 
-### Cadastrar idoso (cria 6 perguntas sugeridas e uma agenda desligada)
+### Cadastrar idoso (cria as 6 perguntas do pitch e uma agenda desligada)
+### guardianName/guardianWhatsapp: quem recebe o resumo diário pelo WhatsApp.
 POST {{baseUrl}}/api/elderly
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -10,7 +11,9 @@ Content-Type: application/json
   "preferredName": "Dona Maria",
   "phoneNumber": "(11) 98765-4321",
   "timezone": "America/Sao_Paulo",
-  "notes": "Usa aparelho auditivo no ouvido esquerdo"
+  "notes": "Usa aparelho auditivo no ouvido esquerdo",
+  "guardianName": "Ana (filha)",
+  "guardianWhatsapp": "(11) 91234-5678"
 }
 
 > {% client.global.set("elderlyId", response.body.id); %}

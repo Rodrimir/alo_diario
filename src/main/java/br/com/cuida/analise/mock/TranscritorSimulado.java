@@ -12,7 +12,7 @@ class TranscritorSimulado implements Transcritor {
   @Override
   public String transcribe(byte[] audio, String filename) {
     return """
-        Assistente: Olá! Aqui é a Cuida. Esta ligação é gravada. Podemos conversar um pouquinho?
+        Assistente: Bom dia! Aqui é a assistente virtual do Alô Diário. Esta ligação é gravada. Podemos conversar um pouquinho?
         Idoso(a): Pode sim.
         Assistente: Como dormiu esta noite?
         Idoso(a): Dormi bem.

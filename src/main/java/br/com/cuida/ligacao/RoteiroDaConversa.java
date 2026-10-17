@@ -5,21 +5,25 @@ import br.com.cuida.ligacao.model.Ligacao;
 import br.com.cuida.ligacao.model.PedidoDeLigacao;
 import br.com.cuida.questionario.model.QuestionarioSnapshot;
 import br.com.cuida.questionario.model.TipoResposta;
+import java.time.Clock;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 /**
- * Monta a abertura e as instruções da assistente. A abertura é fixa e sempre avisa que a ligação é
- * gravada, sem depender do LLM.
+ * Monta a abertura e as instruções da assistente. A abertura é fixa (cumprimento conforme a hora no
+ * fuso do idoso) e sempre avisa que a ligação é gravada, sem depender do LLM.
  */
 @Component
 class RoteiroDaConversa {
 
   private final LigacaoProperties ligacaoProperties;
+  private final Clock clock;
 
-  RoteiroDaConversa(LigacaoProperties ligacaoProperties) {
+  RoteiroDaConversa(LigacaoProperties ligacaoProperties, Clock clock) {
     this.ligacaoProperties = ligacaoProperties;
+    this.clock = clock;
   }
 
   PedidoDeLigacao outboundCall(Ligacao call, IdosoDTO elderly) {
@@ -38,13 +42,22 @@ class RoteiroDaConversa {
   }
 
   String firstMessage(IdosoDTO elderly) {
-    return "Olá, "
+    return cumprimento(LocalTime.ofInstant(clock.instant(), elderly.zone()))
+        + ", "
         + elderly.nameForConversation()
-        + "! Aqui é a "
-        + ligacaoProperties.assistantName()
-        + ", a assistente virtual que liga todos os dias a pedido da sua família. "
-        + "Esta ligação é gravada para que eles possam acompanhar como você está. "
-        + "Podemos conversar um pouquinho?";
+        + "! Aqui é a assistente virtual do "
+        + ligacaoProperties.productName()
+        + ". Esta ligação é gravada para que sua família acompanhe como você está. "
+        + "Gostaria de saber como você está hoje.";
+  }
+
+  /** Bom dia (5h–11h59), Boa tarde (12h–17h59) ou Boa noite, no horário local do idoso. */
+  static String cumprimento(LocalTime horario) {
+    int hora = horario.getHour();
+    if (hora >= 5 && hora < 12) {
+      return "Bom dia";
+    }
+    return hora >= 12 && hora < 18 ? "Boa tarde" : "Boa noite";
   }
 
   String systemPrompt(IdosoDTO elderly, QuestionarioSnapshot questionnaire) {
@@ -61,8 +74,9 @@ class RoteiroDaConversa {
                         + ")")
             .collect(Collectors.joining("\n"));
     return """
-        Você é %s, uma assistente virtual brasileira, calorosa e paciente, que conversa por \
-        telefone com %s, uma pessoa idosa, uma vez por dia, a pedido da família.
+        Você é a assistente virtual do %s, brasileira, calorosa e paciente. Liga uma vez por dia \
+        para %s, uma pessoa idosa que mora sozinha, a pedido da família, para confirmar que está \
+        tudo bem. Não é uma conversa longa nem companhia: é uma checagem rápida e gentil.
 
         Como conversar:
         - Fale português do Brasil, com frases curtas, simples e devagar. Uma pergunta por vez.
@@ -76,11 +90,12 @@ class RoteiroDaConversa {
         a família verá o relato.
         - Se a pessoa não quiser conversar ou não quiser ser gravada, respeite, despeça-se com \
         educação e encerre a ligação.
+        - No fim, pergunte se a pessoa quer deixar um recado para a família.
         - Ao terminar, agradeça, despeça-se ("até amanhã") e encerre a ligação.
         - Nunca peça dados pessoais, senhas, documentos ou dinheiro.
         """
         .formatted(
-            ligacaoProperties.assistantName(),
+            ligacaoProperties.productName(),
             elderly.nameForConversation(),
             questions.isEmpty() ? "- (sem perguntas: converse sobre o dia da pessoa)" : questions);
   }

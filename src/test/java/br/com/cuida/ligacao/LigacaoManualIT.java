@@ -62,7 +62,8 @@ class LigacaoManualIT {
     assertThat(call.getProviderCallId()).startsWith("mock-");
     assertThat(call.getDurationSeconds()).isEqualTo(95);
     assertThat(call.getEndReason()).isEqualTo("assistant-ended-call");
-    assertThat(call.getTranscript()).startsWith("Assistente: Olá, Dona Maria!");
+    assertThat(call.getTranscript())
+        .matches("(?s)Assistente: (Bom dia|Boa tarde|Boa noite), Dona Maria!.*");
     assertThat(call.getTranscript()).contains("Idoso(a): ");
     assertThat(call.getQuestionnaireSnapshot().items()).hasSize(6);
 

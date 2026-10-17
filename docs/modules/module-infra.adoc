@@ -10,6 +10,7 @@ Módulo aberto (todas as classes podem ser usadas pelas funcionalidades), mas se
 |_Configuration properties_
 
 * `b.c.c.i.jwt.JwtProperties` -- Configuração do JWT (HS256).
+* `b.c.c.i.security.CorsProperties` -- Origens do frontend autorizadas a chamar a API pelo navegador (`APP_CORS_ALLOWED_ORIGINS`, separadas por vírgula; aceita padrões como `http://localhost:*`). Vazio = nenhuma.
 
 _Others_
 
@@ -17,7 +18,8 @@ _Others_
 * `b.c.c.i.jwt.TokenService` -- Emite JWTs HS256 com `sub` = id do usuário e `role` = papel.
 * `b.c.c.i.security.UsuarioLogadoService` -- Lê o usuário autenticado do contexto do Spring Security.
 |Properties
-|* `app.security.jwt.allow-random-secret` -- `java.lang.Boolean`, default `false`. se `true` (só no perfil dev), gera um segredo aleatório quando `secret` está vazio
+|* `app.cors.allowed-origins` -- `java.util.List<java.lang.String>`
+* `app.security.jwt.allow-random-secret` -- `java.lang.Boolean`, default `false`. se `true` (só no perfil dev), gera um segredo aleatório quando `secret` está vazio
 * `app.security.jwt.issuer` -- `java.lang.String`, default `cuida`. valor do claim `iss`
 * `app.security.jwt.secret` -- `java.lang.String`. segredo com pelo menos 32 bytes (`JWT_SECRET`)
 * `app.security.jwt.ttl` -- `java.time.Duration`, default `PT1H`. validade do token (`JWT_TTL`, padrão 1h)

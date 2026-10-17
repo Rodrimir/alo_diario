@@ -22,10 +22,10 @@ class SpringDocConfiguration {
     return new OpenAPI()
         .info(
             new Info()
-                .title("Cuida API")
+                .title("Alô Diário API")
                 .version("v1")
                 .description(
-                    "Monitoramento conversacional diário de pessoas idosas. Faça login em"
+                    "A ligação diária que confirma que está tudo bem com quem você ama. Faça login em"
                         + " POST /api/login e use o token em Authorize."))
         .components(
             new Components()

@@ -7,7 +7,9 @@ import br.com.cuida.ligacao.ConsultaLigacaoService;
 import br.com.cuida.ligacao.model.LigacaoDTO;
 import br.com.cuida.ligacao.model.NivelAlerta;
 import br.com.cuida.ligacao.model.OrigemTranscricao;
+import br.com.cuida.ligacao.model.RespostaAtributo;
 import br.com.cuida.ligacao.model.StatusLigacao;
+import br.com.cuida.ligacao.model.StatusResposta;
 import br.com.cuida.testsupport.ApiTestClient;
 import br.com.cuida.testsupport.IntegrationTest;
 import br.com.cuida.testsupport.TestData;
@@ -56,7 +58,20 @@ class PipelineDeAnaliseIT {
     assertThat(call.providerRecordingUrl()).isNull();
     assertThat(Files.exists(STORAGE.resolve(call.audioObjectKey()))).isTrue();
     assertThat(call.summary().answers()).hasSize(6);
-    assertThat(call.summary().answers().getFirst().answer()).contains("Dormi bem");
+    assertThat(call.summary().answers())
+        .extracting(RespostaAtributo::attributeKey)
+        .containsExactly(
+            "wellbeing",
+            "medication",
+            "sleep",
+            "needed_help",
+            "suspicious_call",
+            "message_for_family");
+    assertThat(call.summary().answers().get(2).answer()).contains("Dormi bem");
+    assertThat(call.summary().answers().getFirst().status()).isEqualTo(StatusResposta.ATTENTION);
+    assertThat(call.summary().answers().get(4).headline()).isEqualTo("Nenhuma tentativa de golpe");
+    assertThat(call.summary().familyMessage())
+        .isEqualTo("Diga para minha filha que vou ao médico na segunda-feira.");
     assertThat(call.alertLevel()).isEqualTo(NivelAlerta.ATTENTION);
     assertThat(call.summaryText()).startsWith("Resumo simulado");
   }

@@ -88,6 +88,21 @@ class CalendarioIT {
     MvcTestResult detail = api.get(token, "/api/calls/{id}", callId);
     assertThat(detail).hasStatusOk();
     assertThat(detail).bodyJson().extractingPath("$.summary.answers.length()").isEqualTo(6);
+    assertThat(detail).bodyJson().extractingPath("$.checklist.length()").isEqualTo(5);
+    assertThat(detail)
+        .bodyJson()
+        .extractingPath("$.checklist[1].text")
+        .isEqualTo("Tomou os medicamentos");
+    assertThat(detail)
+        .bodyJson()
+        .extractingPath("$.familyMessage")
+        .isEqualTo("Diga para minha filha que vou ao médico na segunda-feira.");
+    String report = ApiTestClient.read(detail, "$.report");
+    assertThat(report)
+        .startsWith("ALÔ DIÁRIO – Dona Maria\nData: ")
+        .contains("✅ Tomou os medicamentos")
+        .contains("⚠️ Relatou: Estou bem, só com um pouco de dor no joelho.")
+        .endsWith("Recado: \"Diga para minha filha que vou ao médico na segunda-feira.\"");
     assertThat(detail)
         .bodyJson()
         .extractingPath("$.audioUrl")
@@ -97,7 +112,7 @@ class CalendarioIT {
     assertThat(transcript).hasStatusOk();
     assertThat(transcript).bodyJson().extractingPath("$.source").isEqualTo("PROVIDER");
     assertThat((String) ApiTestClient.read(transcript, "$.transcript"))
-        .startsWith("Assistente: Olá, Dona Maria!");
+        .matches("(?s)Assistente: (Bom dia|Boa tarde|Boa noite), Dona Maria!.*");
 
     MvcTestResult audio = api.get(token, "/api/calls/{id}/audio", callId);
     assertThat(audio).hasStatusOk().hasContentType("audio/mpeg");

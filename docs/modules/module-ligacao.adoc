@@ -16,6 +16,7 @@ _Configuration properties_
 
 _Others_
 
+* `b.c.c.l.FormatadorDeResumo` -- Monta o resumo no formato do pitch, usado na tela e na mensagem para a família:  <pre> ALÔ DIÁRIO – Dona Maria Data: 17/10 ✅ Está bem ⚠️ Relatou dor no joelho Recado: "Vou ao médico na segunda-feira." </pre>  A pergunta do recado ({@value #FAMILY_MESSAGE_KEY}) não entra no checklist: vira a linha "Recado".
 * `b.c.c.l.GatewayDeVoz` (via `b.c.c.l.mock.GatewayDeVozSimulado` -- Gateway de voz simulado (padrão no dev e nos testes). Não liga para ninguém: depois de `app.voice.mock.delay`, entrega ao `b.c.c.w.RecebimentoWebhookService` os mesmos eventos que o Vapi mandaria (`status-update` e `end-of-call-report`), no mesmo formato. Assim, o fluxo do webhook em diante é exatamente o de produção.)
 * `b.c.c.l.GatewayDeVoz` (via `b.c.c.l.vapi.GatewayDeVozVapi` -- Liga pelo Vapi (`POST /call`) com um assistente <b>transitório</b>, montado a cada ligação com as perguntas do idoso. Como o Vapi não envia as credenciais da organização para assistentes transitórios, o segredo do webhook vai em `assistant.server.headers`.  
 +
@@ -34,8 +35,8 @@ Idoso de outro tutor responde 404 (não 403), para não revelar que ele existe.
 |Events listened to
 |* `b.c.c.w.model.WebhookRecebido` (async) 
 |Properties
-|* `app.calls.assistant-name` -- `java.lang.String`, default `Cuida`. nome com que a assistente se apresenta
-* `app.calls.max-duration-seconds` -- `java.lang.Integer`, default `600`. duração máxima de uma ligação
+|* `app.calls.max-duration-seconds` -- `java.lang.Integer`, default `600`. duração máxima de uma ligação
+* `app.calls.product-name` -- `java.lang.String`, default `Alô Diário`. nome do produto, usado na apresentação da assistente e nos resumos
 * `app.calls.recovery-window` -- `java.time.Duration`, default `PT2H`. quanto tempo depois do horário ainda vale ligar (app fora do ar)
 * `app.calls.stuck-after` -- `java.time.Duration`, default `PT30M`. sem relatório do provedor depois disso, a ligação é dada como falha
 * `app.voice.mock.delay` -- `java.time.Duration`, default `PT3S`. tempo entre o disparo e a entrega dos webhooks simulados

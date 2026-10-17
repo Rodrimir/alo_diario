@@ -17,8 +17,10 @@ import br.com.cuida.infra.security.UsuarioLogado;
 import br.com.cuida.infra.security.UsuarioLogadoService;
 import br.com.cuida.infra.util.HorarioLocal;
 import br.com.cuida.ligacao.ConsultaLigacaoService;
+import br.com.cuida.ligacao.FormatadorDeResumo;
 import br.com.cuida.ligacao.model.LigacaoDTO;
 import br.com.cuida.ligacao.model.LigacaoResponseDTO;
+import br.com.cuida.ligacao.model.ResumoFormatadoDTO;
 import br.com.cuida.ligacao.model.StatusLigacao;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -37,6 +39,7 @@ import org.springframework.stereotype.Service;
 class CalendarioService {
 
   private final AcessoIdosoService acessoIdosoService;
+  private final FormatadorDeResumo formatadorDeResumo;
   private final ConsultaLigacaoService consultaLigacaoService;
   private final GravacaoService gravacaoService;
   private final AuditoriaService auditoriaService;
@@ -45,11 +48,13 @@ class CalendarioService {
 
   CalendarioService(
       AcessoIdosoService acessoIdosoService,
+      FormatadorDeResumo formatadorDeResumo,
       ConsultaLigacaoService consultaLigacaoService,
       GravacaoService gravacaoService,
       AuditoriaService auditoriaService,
       UsuarioLogadoService usuarioLogadoService,
       Clock clock) {
+    this.formatadorDeResumo = formatadorDeResumo;
     this.acessoIdosoService = acessoIdosoService;
     this.consultaLigacaoService = consultaLigacaoService;
     this.gravacaoService = gravacaoService;
@@ -104,6 +109,11 @@ class CalendarioService {
       auditoriaService.record(
           access.userId(), call.elderlyId(), callId, AcaoAuditada.VIEW_SUMMARY, ip);
     }
+    ResumoFormatadoDTO formatted =
+        call.summary() == null
+            ? null
+            : formatadorDeResumo.formatar(
+                call.summary(), access.elderly().nameForConversation(), call.localDate());
     return new DetalheLigacaoResponseDTO(
         call.id(),
         call.elderlyId(),
@@ -122,7 +132,10 @@ class CalendarioService {
         call.summary(),
         call.hasTranscript(),
         call.hasAudio() ? "/api/calls/" + call.id() + "/audio" : null,
-        call.audioPurged());
+        call.audioPurged(),
+        formatted == null ? null : formatted.checklist(),
+        formatted == null ? null : formatted.familyMessage(),
+        formatted == null ? null : formatted.report());
   }
 
   TranscricaoResponseDTO transcript(UUID callId, String ip) {
