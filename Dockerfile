@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 # --- Build ----------------------------------------------------------------------
-FROM eclipse-temurin:21-jdk-noble AS build
+FROM eclipse-temurin:24-jdk-noble AS build
 # O Maven Wrapper valida o SHA-256 do .zip da distribuição; sem unzip ele baixaria o .tar.gz.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends unzip \
@@ -20,7 +20,7 @@ RUN --mount=type=cache,target=/root/.m2 \
  && java -Djarmode=tools -jar app.jar extract --layers --launcher --destination extracted
 
 # --- Runtime --------------------------------------------------------------------
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 RUN addgroup -S -g 10001 cuida && adduser -S -u 10001 -G cuida cuida
 WORKDIR /app
 
