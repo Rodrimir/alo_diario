@@ -57,6 +57,11 @@ class ApiExceptionHandler {
     return invalid(errors);
   }
 
+  @ExceptionHandler(InvalidRequestException.class)
+  ResponseEntity<ApiError> invalidRequest(InvalidRequestException ex) {
+    return invalid(ex.errors());
+  }
+
   @ExceptionHandler(HttpMessageNotReadableException.class)
   ResponseEntity<ApiError> unreadable(HttpMessageNotReadableException ex) {
     return error(HttpStatus.BAD_REQUEST, "Corpo da requisição inválido ou mal formatado");

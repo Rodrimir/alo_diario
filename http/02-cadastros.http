@@ -1,0 +1,81 @@
+### Rode antes o login em 01-auth.http (salva {{token}}).
+
+### Cadastrar idoso (cria 6 perguntas sugeridas e uma agenda desligada)
+POST {{baseUrl}}/api/elderly
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Maria da Silva",
+  "preferredName": "Dona Maria",
+  "phoneNumber": "(11) 98765-4321",
+  "timezone": "America/Sao_Paulo",
+  "notes": "Usa aparelho auditivo no ouvido esquerdo"
+}
+
+> {% client.global.set("elderlyId", response.body.id); %}
+
+### Listar idosos (admin vê todos; tutor, só os seus)
+GET {{baseUrl}}/api/elderly
+Authorization: Bearer {{token}}
+
+### Detalhe
+GET {{baseUrl}}/api/elderly/{{elderlyId}}
+Authorization: Bearer {{token}}
+
+### Atualizar (substitui o cadastro inteiro)
+PUT {{baseUrl}}/api/elderly/{{elderlyId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Maria da Silva",
+  "preferredName": "Dona Maria",
+  "phoneNumber": "+55 11 98765-4321",
+  "timezone": "America/Sao_Paulo",
+  "active": true
+}
+
+### Declarar consentimento de gravação (sem ele o agendador não liga)
+PUT {{baseUrl}}/api/elderly/{{elderlyId}}/consent
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "recordingConsent": true }
+
+### Agenda
+GET {{baseUrl}}/api/elderly/{{elderlyId}}/schedule
+Authorization: Bearer {{token}}
+
+### Ativar agenda (horário no fuso do idoso)
+PUT {{baseUrl}}/api/elderly/{{elderlyId}}/schedule
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "localTime": "09:30",
+  "daysOfWeek": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+  "active": true,
+  "maxAttempts": 3,
+  "retryIntervalMinutes": 20
+}
+
+### Questionário
+GET {{baseUrl}}/api/elderly/{{elderlyId}}/questionnaire
+Authorization: Bearer {{token}}
+
+### Substituir o questionário (a ordem da lista é a ordem das perguntas; máx. 12)
+PUT {{baseUrl}}/api/elderly/{{elderlyId}}/questionnaire
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+[
+  { "attributeKey": "sleep", "questionText": "Como dormiu esta noite?", "answerType": "FREE_TEXT" },
+  { "attributeKey": "medication", "questionText": "Tomou os remédios de hoje?", "answerType": "YES_NO" },
+  { "attributeKey": "pain", "questionText": "Sente dor? De 1 a 5, quanto?", "answerType": "SCALE_1_5" },
+  { "attributeKey": "water", "questionText": "Bebeu água hoje?", "answerType": "YES_NO", "active": false }
+]
+
+### Excluir definitivamente (LGPD) — apaga agenda, perguntas, ligações e áudios
+DELETE {{baseUrl}}/api/elderly/{{elderlyId}}
+Authorization: Bearer {{token}}

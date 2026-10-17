@@ -21,6 +21,7 @@ class CallSchedule extends AuditableEntity {
 
   static final int DEFAULT_MAX_ATTEMPTS = 3;
   static final int DEFAULT_RETRY_INTERVAL_MINUTES = 20;
+  static final LocalTime DEFAULT_TIME = LocalTime.of(9, 0);
 
   @Column(name = "elderly_id", nullable = false, updatable = false, unique = true)
   private UUID elderlyId;
@@ -48,9 +49,26 @@ class CallSchedule extends AuditableEntity {
   CallSchedule(UUID elderlyId, LocalTime localTime, Set<DayOfWeek> daysOfWeek, boolean active) {
     super(UUID.randomUUID());
     this.elderlyId = Objects.requireNonNull(elderlyId, "elderlyId");
-    this.localTime = Objects.requireNonNull(localTime, "localTime");
-    this.daysOfWeek = EnumSet.copyOf(daysOfWeek);
+    update(localTime, daysOfWeek, active, DEFAULT_MAX_ATTEMPTS, DEFAULT_RETRY_INTERVAL_MINUTES);
+  }
+
+  /** Agenda criada junto com o idoso: todos os dias às 9h, mas desligada até o tutor ativar. */
+  static CallSchedule initialFor(UUID elderlyId) {
+    return new CallSchedule(elderlyId, DEFAULT_TIME, EnumSet.allOf(DayOfWeek.class), false);
+  }
+
+  void update(
+      LocalTime localTime,
+      Set<DayOfWeek> daysOfWeek,
+      boolean active,
+      int maxAttempts,
+      int retryIntervalMinutes) {
+    this.localTime = Objects.requireNonNull(localTime, "localTime").withSecond(0).withNano(0);
+    this.daysOfWeek =
+        daysOfWeek.isEmpty() ? EnumSet.noneOf(DayOfWeek.class) : EnumSet.copyOf(daysOfWeek);
     this.active = active;
+    this.maxAttempts = maxAttempts;
+    this.retryIntervalMinutes = retryIntervalMinutes;
   }
 
   UUID getElderlyId() {
@@ -75,5 +93,10 @@ class CallSchedule extends AuditableEntity {
 
   int getRetryIntervalMinutes() {
     return retryIntervalMinutes;
+  }
+
+  ScheduleView toView() {
+    return new ScheduleView(
+        elderlyId, localTime, daysOfWeek, active, maxAttempts, retryIntervalMinutes);
   }
 }

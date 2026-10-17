@@ -53,6 +53,13 @@ class QuestionnaireItem extends AuditableEntity {
     this.active = active;
   }
 
+  void update(String questionText, AnswerType answerType, int position, boolean active) {
+    this.questionText = Objects.requireNonNull(questionText, "questionText").trim();
+    this.answerType = Objects.requireNonNull(answerType, "answerType");
+    this.position = position;
+    this.active = active;
+  }
+
   UUID getElderlyId() {
     return elderlyId;
   }

@@ -52,10 +52,33 @@ class Elderly extends AuditableEntity {
   Elderly(UUID tutorId, String name, String preferredName, String phoneNumber, String timezone) {
     super(UUID.randomUUID());
     this.tutorId = Objects.requireNonNull(tutorId, "tutorId");
-    this.name = Objects.requireNonNull(name, "name");
-    this.preferredName = preferredName;
+    update(name, preferredName, phoneNumber, timezone, null, true);
+  }
+
+  void update(
+      String name,
+      String preferredName,
+      String phoneNumber,
+      String timezone,
+      String notes,
+      boolean active) {
+    this.name = Objects.requireNonNull(name, "name").trim();
+    this.preferredName = blankToNull(preferredName);
     this.phoneNumber = Objects.requireNonNull(phoneNumber, "phoneNumber");
     this.timezone = ZoneId.of(timezone).getId();
+    this.notes = blankToNull(notes);
+    this.active = active;
+  }
+
+  /** Registra quem declarou (ou revogou) o consentimento de gravação e quando. */
+  void recordConsent(boolean consent, UUID recordedBy, Instant at) {
+    this.recordingConsent = consent;
+    this.consentRecordedBy = Objects.requireNonNull(recordedBy, "recordedBy");
+    this.consentRecordedAt = Objects.requireNonNull(at, "at");
+  }
+
+  private static String blankToNull(String value) {
+    return value == null || value.isBlank() ? null : value.trim();
   }
 
   UUID getTutorId() {
@@ -96,5 +119,10 @@ class Elderly extends AuditableEntity {
 
   boolean isActive() {
     return active;
+  }
+
+  ElderlyView toView() {
+    return new ElderlyView(
+        getId(), tutorId, name, preferredName, phoneNumber, getZoneId(), recordingConsent, active);
   }
 }

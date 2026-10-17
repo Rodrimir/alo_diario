@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 interface QuestionnaireItemRepository extends JpaRepository<QuestionnaireItem, UUID> {
 
   List<QuestionnaireItem> findByElderlyIdOrderByPositionAsc(UUID elderlyId);
+
+  boolean existsByElderlyId(UUID elderlyId);
 }

@@ -17,9 +17,9 @@ top to bottom direction
 
 System_Boundary("CuidaApplication_boundary", "CuidaApplication", $tags="") {
   Container_Boundary("CuidaApplication.CuidaApplication_boundary", "CuidaApplication", $tags="") {
+    Component(CuidaApplication.CuidaApplication.Webhook, "Webhook", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Questionnaire, "Questionnaire", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Schedule, "Schedule", $techn="Module", $descr="", $tags="", $link="")
-    Component(CuidaApplication.CuidaApplication.Webhook, "Webhook", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Call, "Call", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Shared, "Shared", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Audit, "Audit", $techn="Module", $descr="", $tags="", $link="")
@@ -33,8 +33,12 @@ Rel(CuidaApplication.CuidaApplication.Audit, CuidaApplication.CuidaApplication.S
 Rel(CuidaApplication.CuidaApplication.Auth, CuidaApplication.CuidaApplication.Shared, "uses", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Questionnaire, "depends on", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")
-Rel(CuidaApplication.CuidaApplication.Elderly, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Elderly, CuidaApplication.CuidaApplication.Shared, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Questionnaire, CuidaApplication.CuidaApplication.Elderly, "listens to", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Questionnaire, CuidaApplication.CuidaApplication.Elderly, "uses", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Questionnaire, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Schedule, CuidaApplication.CuidaApplication.Elderly, "listens to", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Schedule, CuidaApplication.CuidaApplication.Elderly, "uses", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Schedule, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Webhook, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")
 

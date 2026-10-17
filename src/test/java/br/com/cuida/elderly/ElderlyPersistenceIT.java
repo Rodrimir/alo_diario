@@ -10,7 +10,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @IntegrationTest
@@ -32,7 +31,7 @@ class ElderlyPersistenceIT {
     assertThat(loaded.getZoneId()).isEqualTo(ZoneId.of("America/Recife"));
     assertThat(loaded.hasRecordingConsent()).isFalse();
     assertThat(loaded.isActive()).isTrue();
-    assertThat(elderly.findByTutorId(tutorId, PageRequest.of(0, 10))).hasSize(1);
+    assertThat(elderly.findByTutorIdOrderByNameAsc(tutorId)).hasSize(1);
     assertThat(elderly.findByIdAndTutorId(saved.getId(), UUID.randomUUID())).isEmpty();
   }
 
