@@ -78,6 +78,16 @@ class Call extends AuditableEntity {
   @Column(name = "audio_object_key", length = 300)
   private String audioObjectKey;
 
+  @Column(name = "audio_mime_type", length = 100)
+  private String audioMimeType;
+
+  @Column(name = "audio_size_bytes")
+  private Long audioSizeBytes;
+
+  /** Quando a retenção apagou o áudio ({@code audio_object_key} volta a ser {@code null}). */
+  @Column(name = "audio_purged_at")
+  private Instant audioPurgedAt;
+
   @Column(columnDefinition = "text")
   private String transcript;
 
@@ -182,10 +192,62 @@ class Call extends AuditableEntity {
     }
   }
 
+  /** COMPLETED → PROCESSING. Também aceita PROCESSING (reprocesso depois de queda no meio). */
+  boolean startProcessing() {
+    if (status != CallStatus.COMPLETED && status != CallStatus.PROCESSING) {
+      return false;
+    }
+    status = CallStatus.PROCESSING;
+    failureReason = null;
+    return true;
+  }
+
+  void attachAudio(String objectKey, String mimeType, long sizeBytes) {
+    this.audioObjectKey = Objects.requireNonNull(objectKey, "objectKey");
+    this.audioMimeType = mimeType;
+    this.audioSizeBytes = sizeBytes;
+    this.audioPurgedAt = null;
+    // A URL do provedor não é mais necessária (e expira); não guardamos cópia dela.
+    this.providerRecordingUrl = null;
+  }
+
+  void attachTranscript(String transcript, TranscriptSource source) {
+    this.transcript = transcript;
+    this.transcriptSource = source;
+  }
+
   void recordSummary(CallSummary summary) {
     this.structuredSummary = Objects.requireNonNull(summary, "summary");
     this.summaryText = summary.overview();
     this.alertLevel = summary.alertLevel();
+  }
+
+  void markProcessed(CallSummary summary) {
+    recordSummary(summary);
+    this.status = CallStatus.PROCESSED;
+    this.failureReason = null;
+  }
+
+  void markProcessingFailed(String reason) {
+    this.status = CallStatus.PROCESSING_FAILED;
+    this.failureReason = truncate(reason, 200);
+  }
+
+  /** Volta para COMPLETED para o pipeline rodar de novo (reprocesso manual). */
+  boolean resetForReprocessing() {
+    if (status != CallStatus.PROCESSED && status != CallStatus.PROCESSING_FAILED) {
+      return false;
+    }
+    status = CallStatus.COMPLETED;
+    failureReason = null;
+    return true;
+  }
+
+  void markAudioPurged(Instant at) {
+    this.audioObjectKey = null;
+    this.audioMimeType = null;
+    this.audioSizeBytes = null;
+    this.audioPurgedAt = at;
   }
 
   private static String truncate(String value, int max) {
@@ -215,6 +277,9 @@ class Call extends AuditableEntity {
         transcriptSource,
         providerRecordingUrl,
         audioObjectKey,
+        audioMimeType,
+        audioSizeBytes,
+        audioPurgedAt,
         questionnaireSnapshot,
         structuredSummary,
         summaryText,
@@ -277,6 +342,18 @@ class Call extends AuditableEntity {
 
   String getAudioObjectKey() {
     return audioObjectKey;
+  }
+
+  String getAudioMimeType() {
+    return audioMimeType;
+  }
+
+  Long getAudioSizeBytes() {
+    return audioSizeBytes;
+  }
+
+  Instant getAudioPurgedAt() {
+    return audioPurgedAt;
   }
 
   String getTranscript() {

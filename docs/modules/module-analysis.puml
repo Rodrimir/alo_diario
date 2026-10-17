@@ -17,10 +17,19 @@ top to bottom direction
 
 System_Boundary("CuidaApplication_boundary", "CuidaApplication", $tags="") {
   Container_Boundary("CuidaApplication.CuidaApplication_boundary", "CuidaApplication", $tags="") {
+    Component(CuidaApplication.CuidaApplication.Recording, "Recording", $techn="Module", $descr="", $tags="", $link="")
+    Component(CuidaApplication.CuidaApplication.Call, "Call", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Analysis, "Analysis", $techn="Module", $descr="", $tags="", $link="")
+    Component(CuidaApplication.CuidaApplication.Questionnaire, "Questionnaire", $techn="Module", $descr="", $tags="", $link="")
   }
 
 }
+
+Rel(CuidaApplication.CuidaApplication.Analysis, CuidaApplication.CuidaApplication.Call, "listens to", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Analysis, CuidaApplication.CuidaApplication.Call, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Analysis, CuidaApplication.CuidaApplication.Questionnaire, "depends on", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Analysis, CuidaApplication.CuidaApplication.Recording, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Questionnaire, "uses", $techn="", $tags="", $link="")
 
 SHOW_LEGEND(true)
 hide stereotypes

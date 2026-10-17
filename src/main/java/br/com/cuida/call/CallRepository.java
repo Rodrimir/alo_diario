@@ -83,6 +83,13 @@ interface CallRepository extends JpaRepository<Call, UUID> {
   @Query(
       """
       select c.id from Call c
+       where c.audioObjectKey is not null and c.endedAt < :before
+      """)
+  List<UUID> findIdsWithAudioEndedBefore(Instant before);
+
+  @Query(
+      """
+      select c.id from Call c
        where c.status in (br.com.cuida.call.CallStatus.DIALING,
                           br.com.cuida.call.CallStatus.IN_PROGRESS)
          and c.updatedAt < :before

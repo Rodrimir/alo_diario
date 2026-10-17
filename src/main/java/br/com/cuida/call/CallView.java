@@ -28,6 +28,9 @@ public record CallView(
     TranscriptSource transcriptSource,
     String providerRecordingUrl,
     String audioObjectKey,
+    String audioMimeType,
+    Long audioSizeBytes,
+    Instant audioPurgedAt,
     QuestionnaireSnapshot questionnaireSnapshot,
     CallSummary summary,
     String summaryText,
@@ -41,6 +44,11 @@ public record CallView(
 
   public boolean hasAudio() {
     return audioObjectKey != null;
+  }
+
+  /** O áudio existiu, mas a retenção já o apagou. */
+  public boolean audioPurged() {
+    return audioPurgedAt != null;
   }
 
   public Mood mood() {

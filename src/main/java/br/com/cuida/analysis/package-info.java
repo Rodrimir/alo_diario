@@ -1,10 +1,10 @@
 /**
- * Pipeline pós-ligação: transcrição e resumo estruturado com IA (portas + adaptadores Spring AI e
- * mock).
+ * Pipeline pós-ligação: copia a gravação, transcreve (se preciso) e gera o resumo estruturado
+ * (portas {@code Transcriber}/{@code Summarizer} com adaptadores OpenAI e mock).
  */
 @ApplicationModule(
     displayName = "Analysis",
-    allowedDependencies = {"shared", "call", "recording"})
+    allowedDependencies = {"shared", "call", "recording", "questionnaire"})
 package br.com.cuida.analysis;
 
 import org.springframework.modulith.ApplicationModule;

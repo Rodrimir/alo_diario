@@ -26,3 +26,9 @@ app:
   webhook:
     vapi:
       secret: segredo-do-webhook-de-teste
+  storage:
+    provider: filesystem
+    filesystem:
+      directory: target/test-recordings
+    download:
+      allow-classpath: true

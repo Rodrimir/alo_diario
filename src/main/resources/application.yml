@@ -91,6 +91,32 @@ app:
     vapi:
       # Segredo enviado pelo Vapi em assistant.server.headers. Vazio = webhook recusado.
       secret: ${VAPI_WEBHOOK_SECRET:}
+  storage:
+    # s3 (MinIO/AWS) | filesystem (pasta local)
+    provider: ${APP_STORAGE_PROVIDER:s3}
+    s3:
+      endpoint: ${S3_ENDPOINT:}
+      region: ${S3_REGION:us-east-1}
+      bucket: ${S3_BUCKET:cuida-recordings}
+      access-key: ${S3_ACCESS_KEY:}
+      secret-key: ${S3_SECRET_KEY:}
+      path-style: ${S3_PATH_STYLE:true}
+    filesystem:
+      directory: ${APP_STORAGE_DIRECTORY:./data/recordings}
+    download:
+      # A URL da gravação vem do webhook: só HTTPS destes hosts (proteção contra SSRF).
+      allowed-hosts: ${APP_RECORDING_ALLOWED_HOSTS:storage.vapi.ai,*.vapi.ai}
+      # classpath: só faz sentido com o gateway mock (gravação de exemplo).
+      allow-classpath: ${APP_RECORDING_ALLOW_CLASSPATH:false}
+  ai:
+    # mock (padrão, sem chave) | openai
+    provider: ${APP_AI_PROVIDER:mock}
+    # PROVIDER = usa a transcrição do gateway de voz; WHISPER = transcreve o áudio com a OpenAI.
+    transcription-mode: ${APP_TRANSCRIPTION_MODE:PROVIDER}
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      chat-model: ${OPENAI_CHAT_MODEL:}
+      transcription-model: ${OPENAI_TRANSCRIPTION_MODEL:gpt-4o-mini-transcribe}
 
 server:
   port: ${SERVER_PORT:8080}
