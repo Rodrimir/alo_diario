@@ -10,7 +10,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -18,10 +20,17 @@ import org.hibernate.type.SqlTypes;
 /**
  * Uma tentativa de ligação para uma pessoa idosa. Retentativas são novas linhas com {@code attempt}
  * incrementado e {@code trigger = RETRY}.
+ *
+ * <pre>
+ * SCHEDULED → DIALING → IN_PROGRESS → COMPLETED → PROCESSING → PROCESSED | PROCESSING_FAILED
+ *                    ↘ NO_ANSWER | BUSY | FAILED
+ * </pre>
  */
 @Entity
 @Table(name = "calls")
 class Call extends AuditableEntity {
+
+  static final Set<CallStatus> ACTIVE = EnumSet.of(CallStatus.DIALING, CallStatus.IN_PROGRESS);
 
   @Column(name = "elderly_id", nullable = false, updatable = false)
   private UUID elderlyId;
@@ -121,10 +130,97 @@ class Call extends AuditableEntity {
     this.status = CallStatus.SCHEDULED;
   }
 
+  /** Dia em que o agendador não pôde ligar (ex.: sem consentimento): fica registrado como falha. */
+  static Call notPlaced(
+      UUID elderlyId, Instant scheduledFor, LocalDate localDate, String failureReason) {
+    Call call = new Call(elderlyId, CallTrigger.SCHEDULED, scheduledFor, localDate, 1, null);
+    call.fail(failureReason, scheduledFor);
+    return call;
+  }
+
+  boolean isActive() {
+    return ACTIVE.contains(status);
+  }
+
+  void markInProgress(Instant at) {
+    if (status == CallStatus.DIALING) {
+      status = CallStatus.IN_PROGRESS;
+    }
+    if (startedAt == null) {
+      startedAt = at;
+    }
+  }
+
+  /**
+   * Aceita o relatório final enquanto a ligação está em andamento, e também se ela foi dada como
+   * perdida por falta de relatório (o relatório atrasado recupera o dia).
+   */
+  boolean acceptsReport() {
+    return isActive()
+        || (status == CallStatus.FAILED && FailureReasons.NO_PROVIDER_REPORT.equals(failureReason));
+  }
+
+  void recordReport(ProviderCallEvent.Report report, CallStatus outcome, String failure) {
+    this.status = outcome;
+    this.startedAt = report.startedAt() != null ? report.startedAt() : startedAt;
+    this.endedAt = report.endedAt();
+    this.durationSeconds = report.durationSeconds();
+    this.endReason = truncate(report.endedReason(), 120);
+    this.failureReason = failure;
+    if (report.transcript() != null && !report.transcript().isBlank()) {
+      this.transcript = report.transcript();
+      this.transcriptSource = TranscriptSource.PROVIDER;
+    }
+    this.providerRecordingUrl = report.recordingUrl();
+  }
+
+  void fail(String reason, Instant at) {
+    this.status = CallStatus.FAILED;
+    this.failureReason = truncate(reason, 200);
+    if (endedAt == null) {
+      endedAt = at;
+    }
+  }
+
   void recordSummary(CallSummary summary) {
     this.structuredSummary = Objects.requireNonNull(summary, "summary");
     this.summaryText = summary.overview();
     this.alertLevel = summary.alertLevel();
+  }
+
+  private static String truncate(String value, int max) {
+    if (value == null) {
+      return null;
+    }
+    return value.length() > max ? value.substring(0, max) : value;
+  }
+
+  CallView toView() {
+    return new CallView(
+        getId(),
+        elderlyId,
+        trigger,
+        status,
+        scheduledFor,
+        localDate,
+        attempt,
+        provider,
+        providerCallId,
+        startedAt,
+        endedAt,
+        durationSeconds,
+        endReason,
+        failureReason,
+        transcript,
+        transcriptSource,
+        providerRecordingUrl,
+        audioObjectKey,
+        questionnaireSnapshot,
+        structuredSummary,
+        summaryText,
+        alertLevel,
+        getCreatedAt(),
+        getUpdatedAt());
   }
 
   UUID getElderlyId() {

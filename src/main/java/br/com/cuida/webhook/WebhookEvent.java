@@ -3,6 +3,8 @@ package br.com.cuida.webhook;
 import br.com.cuida.shared.persistence.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.Objects;
@@ -11,12 +13,16 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 /**
- * Evento de webhook recebido de um provedor. O par {@code (provider, event_id)} é único e garante a
- * idempotência. O {@code payload} é apagado após o processamento bem-sucedido (LGPD).
+ * Evento de webhook recebido de um provedor, gravado <b>antes</b> de ser processado (nada se perde
+ * se a aplicação cair no meio). O par {@code (provider, event_id)} é único e garante a
+ * idempotência. O {@code payload} é apagado assim que o processamento termina (LGPD: contém
+ * transcrição e telefone).
  */
 @Entity
 @Table(name = "webhook_events")
 class WebhookEvent extends BaseEntity {
+
+  static final int ERROR_MAX_LENGTH = 1000;
 
   @Column(nullable = false, updatable = false, length = 20)
   private String provider;
@@ -32,13 +38,20 @@ class WebhookEvent extends BaseEntity {
   @Column(columnDefinition = "jsonb")
   private String payload;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  private WebhookStatus status = WebhookStatus.PENDING;
+
+  @Column(nullable = false)
+  private int attempts;
+
   @Column(name = "received_at", nullable = false, updatable = false)
   private Instant receivedAt;
 
   @Column(name = "processed_at")
   private Instant processedAt;
 
-  @Column(length = 1000)
+  @Column(length = ERROR_MAX_LENGTH)
   private String error;
 
   /** Exigido pelo JPA. */
@@ -52,6 +65,45 @@ class WebhookEvent extends BaseEntity {
     this.eventType = eventType;
     this.payload = payload;
     this.receivedAt = Objects.requireNonNull(receivedAt, "receivedAt");
+  }
+
+  void markProcessed(Instant at) {
+    this.status = WebhookStatus.PROCESSED;
+    this.processedAt = at;
+    this.payload = null;
+    this.error = null;
+    this.attempts++;
+  }
+
+  void markIgnored(String reason, Instant at) {
+    this.status = WebhookStatus.IGNORED;
+    this.processedAt = at;
+    this.payload = null;
+    this.error = truncate(reason);
+    this.attempts++;
+  }
+
+  void markFailed(String reason) {
+    this.status = WebhookStatus.FAILED;
+    this.error = truncate(reason);
+    this.attempts++;
+  }
+
+  /** Volta para a fila para uma nova tentativa. */
+  void requeue() {
+    this.status = WebhookStatus.PENDING;
+  }
+
+  /** Expurgo de payload de evento que nunca foi processado (retenção). */
+  void purgePayload() {
+    this.payload = null;
+  }
+
+  private static String truncate(String value) {
+    if (value == null) {
+      return null;
+    }
+    return value.length() > ERROR_MAX_LENGTH ? value.substring(0, ERROR_MAX_LENGTH) : value;
   }
 
   String getProvider() {
@@ -68,6 +120,14 @@ class WebhookEvent extends BaseEntity {
 
   String getPayload() {
     return payload;
+  }
+
+  WebhookStatus getStatus() {
+    return status;
+  }
+
+  int getAttempts() {
+    return attempts;
   }
 
   Instant getReceivedAt() {

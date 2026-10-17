@@ -17,7 +17,7 @@ gerais e nível de alerta), a **transcrição completa** e o **áudio** da liga�
 | 1 | Fundação: projeto, módulos, Flyway, Testcontainers, CI | ✅ |
 | 2 | Segurança (JWT, papéis, ownership), formato de erros, Swagger | ✅ |
 | 3 | Cadastros: idosos, agenda, questionário, consentimento | ✅ |
-| 4 | Agendamento e telefonia (mock), ShedLock, retentativas, webhook idempotente | ⏳ |
+| 4 | Agendamento e telefonia (mock), ShedLock, retentativas, webhook idempotente | ✅ |
 | 5 | Pipeline de IA e áudio (S3/MinIO, transcrição, resumo, Resilience4j) | ⏳ |
 | 6 | Leitura para o tutor: calendário, detalhe, transcrição, áudio, auditoria | ⏳ |
 | 7 | Adaptador Vapi, retenção/LGPD, README final, coleção `.http` | ⏳ |

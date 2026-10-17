@@ -31,8 +31,12 @@ System_Boundary("CuidaApplication_boundary", "CuidaApplication", $tags="") {
 
 Rel(CuidaApplication.CuidaApplication.Audit, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Auth, CuidaApplication.CuidaApplication.Shared, "uses", $techn="", $tags="", $link="")
-Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Questionnaire, "depends on", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Elderly, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Questionnaire, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Schedule, "uses", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Webhook, "listens to", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Webhook, "uses", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Elderly, CuidaApplication.CuidaApplication.Shared, "uses", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Questionnaire, CuidaApplication.CuidaApplication.Elderly, "listens to", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Questionnaire, CuidaApplication.CuidaApplication.Elderly, "uses", $techn="", $tags="", $link="")

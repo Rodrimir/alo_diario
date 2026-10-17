@@ -17,3 +17,12 @@ app:
     admin:
       email: admin@teste.local
       password: admin-de-teste-123
+  jobs:
+    # Os testes chamam os jobs diretamente, com o instante que quiserem.
+    enabled: false
+  voice:
+    mock:
+      delay: PT0S
+  webhook:
+    vapi:
+      secret: segredo-do-webhook-de-teste

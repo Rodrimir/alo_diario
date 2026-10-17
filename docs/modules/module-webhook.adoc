@@ -4,4 +4,12 @@
 |Recepção idempotente de webhooks dos provedores (inbox em `webhook_events`).
 |Base package
 |`br.com.cuida.webhook`
+|Spring components
+|_Services_
+
+* `b.c.c.w.WebhookEvents` -- API pública do módulo para quem processa os webhooks: lê o payload e registra o resultado.
+* `b.c.c.w.WebhookInbox` -- Porta de entrada dos webhooks (API pública do módulo): grava o evento e publica `b.c.c.w.WebhookReceived` na mesma transação. Um evento repetido (mesmo provedor e id) é reconhecido e descartado, inclusive quando duas entregas chegam ao mesmo tempo.
+|Properties
+|* `app.webhook.vapi.secret` -- `java.lang.String`. valor esperado no header (`VAPI_WEBHOOK_SECRET`); vazio = todo webhook é recusado
+* `app.webhook.vapi.secret-header` -- `java.lang.String`, default `X-Webhook-Secret`. nome do header (o mesmo enviado em `assistant.server.headers`)
 |===

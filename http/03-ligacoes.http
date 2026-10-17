@@ -1,0 +1,30 @@
+### Rode antes 01-auth.http e 02-cadastros.http (salvam {{token}} e {{elderlyId}}).
+### No perfil dev o gateway é simulado (mock): nada é discado, e os webhooks chegam ~3 s depois.
+### Cenários do mock pelos 4 últimos dígitos do telefone do idoso:
+###   0000 = não atende | 1111 = ocupado | 2222 = erro ao discar | 9999 = relato de queda (URGENT)
+
+### Ligar agora (422 sem consentimento; 409 se já houver ligação em andamento)
+POST {{baseUrl}}/api/elderly/{{elderlyId}}/calls
+Authorization: Bearer {{token}}
+
+> {% client.global.set("callId", response.body.id); %}
+
+### Webhook do Vapi (o que o provedor real envia). Exige o header com VAPI_WEBHOOK_SECRET.
+POST {{baseUrl}}/webhook/vapi
+Content-Type: application/json
+X-Webhook-Secret: {{vapiWebhookSecret}}
+
+{
+  "message": {
+    "type": "end-of-call-report",
+    "endedReason": "customer-ended-call",
+    "startedAt": "2026-10-17T12:00:00.000Z",
+    "endedAt": "2026-10-17T12:03:10.000Z",
+    "durationSeconds": 190,
+    "call": { "id": "id-da-ligacao-no-vapi", "metadata": { "callId": "{{callId}}" } },
+    "artifact": {
+      "transcript": "AI: Olá, Dona Maria!\nUser: Oi, tudo bem?",
+      "recordingUrl": "https://storage.vapi.ai/exemplo.mp3"
+    }
+  }
+}

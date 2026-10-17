@@ -30,10 +30,24 @@ spring:
 
   modulith:
     events:
+      # Publicações pendentes (listener falhou / app caiu) são reenviadas na inicialização.
+      republish-outstanding-events-on-restart: true
       jdbc:
         # A tabela event_publication é criada pelo Flyway (V1).
         schema-initialization:
           enabled: false
+
+  # Executor dos listeners assíncronos (pipeline pós-ligação). Limitado de propósito.
+  task:
+    execution:
+      thread-name-prefix: pipeline-
+      pool:
+        core-size: ${APP_PIPELINE_THREADS:4}
+        max-size: ${APP_PIPELINE_THREADS:4}
+        queue-capacity: 1000
+      shutdown:
+        await-termination: true
+        await-termination-period: PT30S
 
   web:
     locale: pt_BR
@@ -60,6 +74,23 @@ app:
     admin:
       email: ${APP_BOOTSTRAP_ADMIN_EMAIL:}
       password: ${APP_BOOTSTRAP_ADMIN_PASSWORD:}
+  jobs:
+    # Liga/desliga todos os jobs agendados (agendador de ligações, retentativas, limpezas).
+    enabled: ${APP_JOBS_ENABLED:true}
+  calls:
+    recovery-window: ${APP_CALLS_RECOVERY_WINDOW:PT2H}
+    stuck-after: ${APP_CALLS_STUCK_AFTER:PT30M}
+    max-duration-seconds: ${APP_CALLS_MAX_DURATION_SECONDS:600}
+    assistant-name: ${APP_ASSISTANT_NAME:Cuida}
+  voice:
+    # mock (padrão: simula a ligação e os webhooks) | vapi
+    provider: ${APP_VOICE_PROVIDER:mock}
+    mock:
+      delay: ${APP_VOICE_MOCK_DELAY:PT3S}
+  webhook:
+    vapi:
+      # Segredo enviado pelo Vapi em assistant.server.headers. Vazio = webhook recusado.
+      secret: ${VAPI_WEBHOOK_SECRET:}
 
 server:
   port: ${SERVER_PORT:8080}
