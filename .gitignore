@@ -11,6 +11,34 @@ replay_pid*
 .env.*
 !.env.example
 http/http-client.private.env.json
+application-local.yml
+application-local.properties
+src/main/resources/application-local.*
+docker-compose.override.yml
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+credentials.json
+.claude/settings.local.json
+
+# --- Dados locais (podem conter dados pessoais: áudios, transcrições, dumps) ---
+data/
+logs/
+media-storage/
+*.dump
+*.sql.gz
+*.hprof
+
+# --- Material de referência externo -----------------------------------------
+# Código de outro projeto, usado só como referência de padrões de API. Contém
+# credenciais versionadas no application.properties: NUNCA publicar.
+exemplos/
+
+# --- Gradle (se algum exemplo/ferramenta gerar) -----------------------------
+.gradle/
+build/
 
 # --- IntelliJ IDEA ------------------------------------------------------------
 .idea/
