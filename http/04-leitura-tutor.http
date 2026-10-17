@@ -1,0 +1,29 @@
+### Rode antes 01-auth, 02-cadastros e 03-ligacoes (salvam {{token}}, {{elderlyId}} e {{callId}}).
+
+### Calendário do mês (padrão: mês atual no fuso do idoso)
+GET {{baseUrl}}/api/elderly/{{elderlyId}}/calendar?month=2026-10
+Authorization: Bearer {{token}}
+
+### Todas as tentativas de um dia (padrão: hoje)
+GET {{baseUrl}}/api/elderly/{{elderlyId}}/calls?date=2026-10-17
+Authorization: Bearer {{token}}
+
+### Detalhe com o resumo estruturado (auditado: VIEW_SUMMARY)
+GET {{baseUrl}}/api/calls/{{callId}}
+Authorization: Bearer {{token}}
+
+### Transcrição completa (auditado: VIEW_TRANSCRIPT)
+GET {{baseUrl}}/api/calls/{{callId}}/transcript
+Authorization: Bearer {{token}}
+
+### Áudio (auditado: PLAY_AUDIO). 410 se a retenção já apagou.
+GET {{baseUrl}}/api/calls/{{callId}}/audio
+Authorization: Bearer {{token}}
+
+### Log de acessos aos dados do idoso (só administrador)
+GET {{baseUrl}}/api/elderly/{{elderlyId}}/access-log
+Authorization: Bearer {{adminToken}}
+
+### Reprocessar o pipeline de uma ligação (só administrador)
+POST {{baseUrl}}/api/calls/{{callId}}/reprocess
+Authorization: Bearer {{adminToken}}

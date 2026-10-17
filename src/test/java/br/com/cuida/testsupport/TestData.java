@@ -1,9 +1,12 @@
 package br.com.cuida.testsupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+import java.time.Duration;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 /** Cadastros prontos pela API, para os testes de fluxo. */
@@ -24,6 +27,23 @@ public final class TestData {
                 .formatted(phone));
     assertThat(result).hasStatus(HttpStatus.OK);
     return UUID.fromString(ApiTestClient.read(result, "$.id"));
+  }
+
+  /** Dispara "ligar agora" (gateway mock) e espera o pipeline terminar. @return id da ligação */
+  public static UUID processedCall(
+      ApiTestClient api, String token, UUID elderlyId, JdbcTemplate jdbc) {
+    MvcTestResult result = api.post(token, "/api/elderly/{id}/calls", null, elderlyId);
+    assertThat(result).hasStatus(HttpStatus.OK);
+    UUID callId = UUID.fromString(ApiTestClient.read(result, "$.id"));
+    await()
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                assertThat(
+                        jdbc.queryForObject(
+                            "select status from calls where id = ?", String.class, callId))
+                    .isEqualTo("PROCESSED"));
+    return callId;
   }
 
   public static UUID createElderlyWithConsent(ApiTestClient api, String token, String phone) {

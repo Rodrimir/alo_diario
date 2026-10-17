@@ -1,7 +1,15 @@
 [%autowidth.stretch, cols="h,a"]
 |===
 |Description
-|Consultas de leitura do tutor: calendário, detalhe, transcrição e URL do áudio.
+|Leitura do tutor: calendário do mês, ligações do dia, detalhe com resumo, transcrição, áudio e o log de acessos. Toda leitura de dado sensível é auditada.
 |Base package
 |`br.com.cuida.calendar`
+|Bean references
+|* `b.c.c.e.ElderlyDirectory` (in Elderly) -- API pública do módulo para os demais: consulta de idosos e checagem de acesso.  
++
+Idoso de outro tutor responde 404 (não 403), para não revelar que ele existe.
+* `b.c.c.c.CallQueries` (in Call) -- Consultas de ligações para os outros módulos (API pública).
+* `b.c.c.r.Recordings` (in Recording) -- API pública do módulo: copia, lê e apaga gravações.
+* `b.c.c.a.AuditTrail` (in Audit) -- Registra e consulta quem acessou resumo, transcrição ou áudio de um idoso (API pública).
+* `b.c.c.s.security.CurrentUserProvider` (in Shared) -- Lê o usuário autenticado do contexto do Spring Security.
 |===

@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 interface AccessAuditLogRepository extends JpaRepository<AccessAuditLog, UUID> {
 
   List<AccessAuditLog> findByCallIdOrderByOccurredAtAsc(UUID callId);
+
+  List<AccessAuditLog> findTop500ByElderlyIdOrderByOccurredAtDesc(UUID elderlyId);
 }

@@ -17,8 +17,8 @@ top to bottom direction
 
 System_Boundary("CuidaApplication_boundary", "CuidaApplication", $tags="") {
   Container_Boundary("CuidaApplication.CuidaApplication_boundary", "CuidaApplication", $tags="") {
-    Component(CuidaApplication.CuidaApplication.Recording, "Recording", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Elderly, "Elderly", $techn="Module", $descr="", $tags="", $link="")
+    Component(CuidaApplication.CuidaApplication.Recording, "Recording", $techn="Module", $descr="", $tags="", $link="")
   }
 
 }

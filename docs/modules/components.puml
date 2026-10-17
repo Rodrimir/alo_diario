@@ -17,16 +17,17 @@ top to bottom direction
 
 System_Boundary("CuidaApplication_boundary", "CuidaApplication", $tags="") {
   Container_Boundary("CuidaApplication.CuidaApplication_boundary", "CuidaApplication", $tags="") {
-    Component(CuidaApplication.CuidaApplication.Recording, "Recording", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Schedule, "Schedule", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Call, "Call", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Analysis, "Analysis", $techn="Module", $descr="", $tags="", $link="")
+    Component(CuidaApplication.CuidaApplication.Calendar, "Calendar", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Shared, "Shared", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Audit, "Audit", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Auth, "Auth", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Elderly, "Elderly", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Webhook, "Webhook", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Questionnaire, "Questionnaire", $techn="Module", $descr="", $tags="", $link="")
+    Component(CuidaApplication.CuidaApplication.Recording, "Recording", $techn="Module", $descr="", $tags="", $link="")
   }
 
 }
@@ -37,6 +38,11 @@ Rel(CuidaApplication.CuidaApplication.Analysis, CuidaApplication.CuidaApplicatio
 Rel(CuidaApplication.CuidaApplication.Analysis, CuidaApplication.CuidaApplication.Recording, "uses", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Audit, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Auth, CuidaApplication.CuidaApplication.Shared, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Calendar, CuidaApplication.CuidaApplication.Audit, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Calendar, CuidaApplication.CuidaApplication.Call, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Calendar, CuidaApplication.CuidaApplication.Elderly, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Calendar, CuidaApplication.CuidaApplication.Recording, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Calendar, CuidaApplication.CuidaApplication.Shared, "uses", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Elderly, "uses", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Questionnaire, "uses", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Schedule, "uses", $techn="", $tags="", $link="")
