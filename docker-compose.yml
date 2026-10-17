@@ -1,0 +1,74 @@
+# Infraestrutura local: PostgreSQL 16 + armazenamento S3 compatível (MinIO) + criação do bucket.
+#   docker compose up -d                 -> só infraestrutura (rode a app com ./mvnw spring-boot:run)
+#   docker compose --profile app up -d   -> infraestrutura + aplicação em container
+#
+# Imagens MinIO: a MinIO deixou de publicar as imagens oficiais (minio/minio) em out/2025.
+# Usamos as imagens gratuitas da Chainguard, fixadas por digest (veja README > Questões em aberto).
+name: cuida
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-cuida}
+      POSTGRES_USER: ${DB_USERNAME:-cuida}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-cuida}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    # cgr.dev/chainguard/minio:latest (MinIO RELEASE.2026-09-22T19-25-18Z)
+    image: cgr.dev/chainguard/minio@sha256:c93745c56fccdaf0e5dcb88999a96a65a136428beb045ef5d546255a80d747a7
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-cuida}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-cuida-dev-password}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio-data:/data
+
+  # Cria o bucket de gravações (idempotente). A imagem não tem shell; o mc lê o alias da variável
+  # MC_HOST_local e o container reinicia até o MinIO aceitar conexões.
+  minio-init:
+    # cgr.dev/chainguard/minio-client:latest
+    image: cgr.dev/chainguard/minio-client@sha256:d8a93c5d335509ff353774eefec8f82fa2a2a975e800139702232d8be3dbe6b9
+    depends_on:
+      - minio
+    environment:
+      MC_HOST_local: http://${MINIO_ROOT_USER:-cuida}:${MINIO_ROOT_PASSWORD:-cuida-dev-password}@minio:9000
+    command: ["mb", "--ignore-existing", "local/${S3_BUCKET:-cuida-recordings}"]
+    restart: on-failure
+
+  app:
+    profiles: ["app"]
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-cuida}
+      DB_USERNAME: ${DB_USERNAME:-cuida}
+      DB_PASSWORD: ${DB_PASSWORD:-cuida}
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_ENDPOINT: http://localhost:${MINIO_API_PORT:-9000}
+      S3_BUCKET: ${S3_BUCKET:-cuida-recordings}
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-cuida}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-cuida-dev-password}
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+
+volumes:
+  postgres-data:
+  minio-data:

@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Ciclo de vida da ligação: agendador, retentativas, disparo, status e a porta `VoiceCallGateway`. Adaptadores em `call.vapi` e `call.mock`.
+|Base package
+|`br.com.cuida.call`
+|===

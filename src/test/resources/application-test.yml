@@ -1,0 +1,10 @@
+# Perfil de testes. O datasource vem do Testcontainers (@ServiceConnection).
+spring:
+  main:
+    banner-mode: off
+
+logging:
+  level:
+    root: WARN
+    br.com.cuida: INFO
+    org.flywaydb: WARN

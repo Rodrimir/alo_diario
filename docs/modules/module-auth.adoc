@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Registro e login de tutores, emissão de JWT e papéis (`ROLE_TUTOR`, `ROLE_ADMIN`).
+|Base package
+|`br.com.cuida.auth`
+|===

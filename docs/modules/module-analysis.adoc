@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Pipeline pós-ligação: transcrição e resumo estruturado com IA (portas + adaptadores Spring AI e mock).
+|Base package
+|`br.com.cuida.analysis`
+|===

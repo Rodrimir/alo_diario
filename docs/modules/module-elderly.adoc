@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Cadastro da pessoa idosa, consentimento de gravação e exclusão definitiva (LGPD).
+|Base package
+|`br.com.cuida.elderly`
+|===

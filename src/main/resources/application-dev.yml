@@ -1,0 +1,17 @@
+# Perfil de desenvolvimento local: roda de ponta a ponta sem nenhuma chave externa.
+# Os valores padrão abaixo apontam para os serviços do docker-compose.yml (credenciais locais, não
+# são segredos). Sobrescreva via .env ou variáveis de ambiente.
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:${DB_PORT:5432}/${DB_NAME:cuida}}
+    username: ${DB_USERNAME:cuida}
+    password: ${DB_PASSWORD:cuida}
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    br.com.cuida: DEBUG

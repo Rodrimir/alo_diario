@@ -1,0 +1,2 @@
+# Use `sdk env` (SDKMAN!) nesta pasta para ativar o JDK do projeto.
+java=21.0.12+1.1-tem

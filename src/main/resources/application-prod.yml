@@ -1,0 +1,16 @@
+# Perfil de produção: todas as variáveis são obrigatórias (sem defaults) e os logs saem em JSON.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+server:
+  forward-headers-strategy: framework
+
+logging:
+  structured:
+    format:
+      console: ecs
+  level:
+    br.com.cuida: INFO

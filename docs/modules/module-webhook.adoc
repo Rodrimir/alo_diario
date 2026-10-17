@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Recepção idempotente de webhooks dos provedores (inbox em `webhook_events`).
+|Base package
+|`br.com.cuida.webhook`
+|===

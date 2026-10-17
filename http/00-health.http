@@ -1,0 +1,11 @@
+### Formato: HTTP Client do IntelliJ (selecione o ambiente "dev" em http-client.env.json).
+### Segredos locais (tokens etc.) vão em http-client.private.env.json, que não é versionado.
+
+### Saúde da aplicação
+GET {{baseUrl}}/actuator/health
+
+### Probes de liveness/readiness
+GET {{baseUrl}}/actuator/health/liveness
+
+###
+GET {{baseUrl}}/actuator/health/readiness

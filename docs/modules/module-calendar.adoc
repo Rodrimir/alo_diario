@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Consultas de leitura do tutor: calendário, detalhe, transcrição e URL do áudio.
+|Base package
+|`br.com.cuida.calendar`
+|===

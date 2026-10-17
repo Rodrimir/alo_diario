@@ -1,0 +1,70 @@
+# Configuração comum a todos os perfis. Valores sensíveis vêm SEMPRE de variáveis de ambiente.
+# Perfis: dev (padrão, adaptadores mock), test (Testcontainers), prod (provedores reais).
+spring:
+  application:
+    name: cuida-backend
+  profiles:
+    default: dev
+  config:
+    # Permite usar um arquivo .env local (não versionado) no formato CHAVE=valor.
+    import: optional:file:.env[.properties]
+
+  # URL/usuário/senha são definidos por perfil (dev: defaults locais; prod: obrigatórios;
+  # test: Testcontainers).
+  datasource:
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  modulith:
+    events:
+      jdbc:
+        # A tabela event_publication é criada pelo Flyway (V1).
+        schema-initialization:
+          enabled: false
+
+  web:
+    locale: pt_BR
+    locale-resolver: fixed
+
+  threads:
+    virtual:
+      enabled: false
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  error:
+    include-stacktrace: never
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  info:
+    env:
+      enabled: false
+
+logging:
+  level:
+    root: INFO
+    br.com.cuida: INFO

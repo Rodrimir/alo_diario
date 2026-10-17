@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Log de acesso a dados sensíveis (resumo, transcrição e áudio).
+|Base package
+|`br.com.cuida.audit`
+|===

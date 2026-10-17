@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Armazenamento de áudio (porta `AudioStorage` + S3/MinIO), URL pré-assinada e retenção.
+|Base package
+|`br.com.cuida.recording`
+|===

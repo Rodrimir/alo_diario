@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Perguntas/atributos que a IA deve cobrir na conversa e o snapshot congelado em cada ligação.
+|Base package
+|`br.com.cuida.questionnaire`
+|===

@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Agenda de ligações de cada pessoa idosa (horário local, dias da semana, retentativas).
+|Base package
+|`br.com.cuida.schedule`
+|===
