@@ -13,8 +13,8 @@ class ArchitectureTests {
   private static final String BASE = "br.com.cuida";
 
   private static final String[] FEATURES = {
-    "auth", "elderly", "schedule", "questionnaire", "call",
-    "webhook", "analysis", "recording", "calendar", "audit"
+    "autenticacao", "idoso", "agenda", "questionario", "ligacao",
+    "webhook", "analise", "gravacao", "calendario", "auditoria"
   };
 
   private final JavaClasses classes =
@@ -39,18 +39,18 @@ class ArchitectureTests {
   }
 
   @Test
-  void sharedDoesNotDependOnFeatures() {
+  void infraDoesNotDependOnFeatures() {
     String[] featurePackages = new String[FEATURES.length];
     for (int i = 0; i < FEATURES.length; i++) {
       featurePackages[i] = BASE + "." + FEATURES[i] + "..";
     }
     noClasses()
         .that()
-        .resideInAPackage(BASE + ".shared..")
+        .resideInAPackage(BASE + ".infra..")
         .should()
         .dependOnClassesThat()
         .resideInAnyPackage(featurePackages)
-        .because("shared contém apenas infraestrutura transversal")
+        .because("infra contém apenas infraestrutura transversal")
         .check(classes);
   }
 }

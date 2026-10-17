@@ -17,13 +17,13 @@ top to bottom direction
 
 System_Boundary("CuidaApplication_boundary", "CuidaApplication", $tags="") {
   Container_Boundary("CuidaApplication.CuidaApplication_boundary", "CuidaApplication", $tags="") {
-    Component(CuidaApplication.CuidaApplication.Shared, "Shared", $techn="Module", $descr="", $tags="", $link="")
+    Component(CuidaApplication.CuidaApplication.Infra, "Infra", $techn="Module", $descr="", $tags="", $link="")
     Component(CuidaApplication.CuidaApplication.Webhook, "Webhook", $techn="Module", $descr="", $tags="", $link="")
   }
 
 }
 
-Rel(CuidaApplication.CuidaApplication.Webhook, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Webhook, CuidaApplication.CuidaApplication.Infra, "depends on", $techn="", $tags="", $link="")
 
 SHOW_LEGEND(true)
 hide stereotypes

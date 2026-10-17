@@ -37,20 +37,22 @@ class VapiWebhookController {
 
   private static final Logger log = LoggerFactory.getLogger(VapiWebhookController.class);
 
-  private final WebhookInbox inbox;
-  private final VapiWebhookProperties properties;
+  private final RecebimentoWebhookService recebimentoWebhookService;
+  private final VapiWebhookProperties vapiWebhookProperties;
   private final JsonMapper jsonMapper;
 
   VapiWebhookController(
-      WebhookInbox inbox, VapiWebhookProperties properties, JsonMapper jsonMapper) {
-    this.inbox = inbox;
-    this.properties = properties;
+      RecebimentoWebhookService recebimentoWebhookService,
+      VapiWebhookProperties vapiWebhookProperties,
+      JsonMapper jsonMapper) {
+    this.recebimentoWebhookService = recebimentoWebhookService;
+    this.vapiWebhookProperties = vapiWebhookProperties;
     this.jsonMapper = jsonMapper;
   }
 
   @PostMapping("/vapi")
   ResponseEntity<String> receive(@RequestHeader HttpHeaders headers, @RequestBody String body) {
-    if (!authentic(headers.getFirst(properties.secretHeader()))) {
+    if (!authentic(headers.getFirst(vapiWebhookProperties.secretHeader()))) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
     JsonNode message;
@@ -65,7 +67,8 @@ class VapiWebhookController {
     }
     String callId = message.path("call").path("id").asString("");
     String eventId = callId.isEmpty() ? "sha256:" + sha256(body) : eventId(callId, type, message);
-    WebhookInbox.Result result = inbox.receive(PROVIDER, eventId, type, body);
+    RecebimentoWebhookService.Result result =
+        recebimentoWebhookService.receive(PROVIDER, eventId, type, body);
     log.debug("Webhook vapi {} ({}): {}", type, eventId, result);
     return ResponseEntity.ok(RECEIVED);
   }
@@ -76,7 +79,7 @@ class VapiWebhookController {
   }
 
   private boolean authentic(String received) {
-    if (!properties.configured()) {
+    if (!vapiWebhookProperties.configured()) {
       log.warn("Webhook do Vapi recusado: VAPI_WEBHOOK_SECRET não configurado");
       return false;
     }
@@ -85,7 +88,7 @@ class VapiWebhookController {
     }
     return MessageDigest.isEqual(
         received.getBytes(StandardCharsets.UTF_8),
-        properties.secret().getBytes(StandardCharsets.UTF_8));
+        vapiWebhookProperties.secret().getBytes(StandardCharsets.UTF_8));
   }
 
   private static String sha256(String body) {

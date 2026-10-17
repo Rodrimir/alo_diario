@@ -1,0 +1,33 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Pipeline pós-ligação: copia a gravação, transcreve (se preciso) e gera o resumo estruturado (portas `b.c.c.l.vapi.VapiProperties.Transcritor`/`b.c.c.a.Resumidor` com adaptadores OpenAI e simulados).
+|Base package
+|`br.com.cuida.analise`
+|Spring components
+|_Configuration properties_
+
+* `b.c.c.a.IaProperties` -- Configuração da IA.
+
+_Others_
+
+* `b.c.c.a.ResilienciaIa` -- Retry + circuit breaker para as chamadas de IA. Nenhum erro 4xx é repetido (inclusive 429: repetir só piora a cota); falhas de rede, 5xx e resposta inválida do modelo são repetidas até 3 vezes com espera exponencial. Os retries internos do SDK ficam desligados para não multiplicar tentativas.
+* `b.c.c.a.Resumidor` (via `b.c.c.a.mock.ResumidorSimulado` -- Resumo simulado e determinístico (sem chave de API), feito por regras simples sobre a transcrição: a resposta de cada pergunta é a fala da pessoa logo depois dela. Serve para o dev e os testes exercitarem o fluxo inteiro; o texto deixa claro que é simulado.)
+* `b.c.c.a.Transcritor` (via `b.c.c.a.mock.TranscritorSimulado` -- Transcrição simulada (sem chave de API). Só é usada no modo `WHISPER`.)
+* `b.c.c.a.Resumidor` (via `b.c.c.a.openai.ResumidorOpenAi` -- Resumo com Structured Output: o JSON Schema de `b.c.c.l.model.ResumoLigacao` vai no `response_format` e a resposta é convertida direto para o record. A transcrição é tratada como <b>dado</b>, entre delimitadores, para reduzir o efeito de instruções ditas na ligação (prompt injection).)
+* `b.c.c.a.Transcritor` (via `b.c.c.a.openai.TranscritorOpenAi` -- Transcrição com a OpenAI. A API aceita até 25 MB por arquivo; com mp3 e o limite de 10 minutos por ligação ficamos bem abaixo disso.)
+|Bean references
+|* `b.c.c.l.ConsultaLigacaoService` (in Ligação) -- Consultas de ligações para os outros módulos (API pública).
+* `b.c.c.l.ProcessamentoLigacaoService` (in Ligação) -- API pública para o pipeline pós-ligação (módulo `analysis`) e para a retenção (módulo `recording`). Cada método é uma transação curta e idempotente.
+* `b.c.c.g.GravacaoService` (in Gravação) -- API pública do módulo: copia, lê e apaga gravações.
+|Events listened to
+|* `b.c.c.l.model.LigacaoEncerrada` (async) 
+|Properties
+|* `app.ai.openai.api-key` -- `java.lang.String`. `OPENAI_API_KEY`
+* `app.ai.openai.base-url` -- `java.lang.String`
+* `app.ai.openai.chat-model` -- `java.lang.String`. modelo do resumo; vazio = padrão do Spring AI
+* `app.ai.openai.timeout` -- `java.time.Duration`, default `PT90S`. tempo máximo de cada chamada
+* `app.ai.openai.transcription-model` -- `java.lang.String`, default `gpt-4o-mini-transcribe`. modelo de transcrição
+* `app.ai.provider` -- `java.lang.String`, default `mock`. `mock` (padrão, sem chave) ou `openai`
+* `app.ai.transcription-mode` -- `b.c.c.a.IaProperties.TranscriptionMode`, default `PROVIDER`. `PROVIDER` usa a transcrição do gateway de voz; `WHISPER` sempre transcreve o áudio com o nosso provedor
+|===

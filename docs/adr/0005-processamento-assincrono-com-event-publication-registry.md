@@ -17,9 +17,9 @@ trabalho num restart deixaria o dia do idoso sem resumo.
 
 ## Decisão
 
-Opção 3, com um **executor dedicado e limitado** (`pipelineExecutor`):
+Opção 3, com um **executor dedicado e limitado** (`applicationTaskExecutor`):
 
-- O evento (ex.: `CallEnded`) é gravado em `event_publication` **na mesma transação** que muda o
+- O evento (ex.: `LigacaoEncerrada`) é gravado em `event_publication` **na mesma transação** que muda o
   estado. O listener roda depois do commit, em outra thread.
 - Publicações incompletas são **republicadas no restart**. Um job (com ShedLock) reenvia as que
   ficarem paradas por mais de N minutos.

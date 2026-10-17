@@ -1,0 +1,30 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Armazenamento das gravações (porta `b.c.c.g.ArmazenamentoDeAudio`: S3/MinIO ou disco), cópia da gravação do provedor, leitura para o player do tutor, exclusão LGPD e retenção.
+|Base package
+|`br.com.cuida.gravacao`
+|Spring components
+|_Services_
+
+* `b.c.c.g.GravacaoService` -- API pública do módulo: copia, lê e apaga gravações.
+|Bean references
+|* `b.c.c.l.ProcessamentoLigacaoService` (in Ligação) -- API pública para o pipeline pós-ligação (módulo `analysis`) e para a retenção (módulo `recording`). Cada método é uma transação curta e idempotente.
+* `b.c.c.l.ConsultaLigacaoService` (in Ligação) -- Consultas de ligações para os outros módulos (API pública).
+|Events listened to
+|* `b.c.c.i.model.IdosoExcluido` (async) -- Exclusão LGPD: apaga todos os áudios do idoso depois que o cadastro sai do banco.
+|Properties
+|* `app.retention.audio-days` -- `java.lang.Integer`, default `90`
+* `app.storage.download.allow-classpath` -- `java.lang.Boolean`, default `false`. aceita `classpath:` (só para o gateway mock)
+* `app.storage.download.allowed-hosts` -- `java.util.List<java.lang.String>`, default `[storage.vapi.ai, *.vapi.ai]`. hosts de onde a gravação pode ser baixada (proteção contra SSRF); `*.dominio` vale para subdomínios
+* `app.storage.download.max-bytes` -- `java.lang.Long`, default `52428800`. tamanho máximo aceito
+* `app.storage.download.timeout` -- `java.time.Duration`, default `PT60S`. tempo máximo do download
+* `app.storage.filesystem.directory` -- `java.nio.file.Path`, default `./data/recordings`
+* `app.storage.provider` -- `java.lang.String`, default `s3`. `s3` (MinIO/AWS) ou `filesystem` (pasta local)
+* `app.storage.s3.access-key` -- `java.lang.String`
+* `app.storage.s3.bucket` -- `java.lang.String`, default `cuida-recordings`
+* `app.storage.s3.endpoint` -- `java.lang.String`. vazio = AWS; preenchido = S3 compatível (MinIO)
+* `app.storage.s3.path-style` -- `java.lang.Boolean`, default `true`. obrigatório para o MinIO
+* `app.storage.s3.region` -- `java.lang.String`, default `us-east-1`
+* `app.storage.s3.secret-key` -- `java.lang.String`
+|===

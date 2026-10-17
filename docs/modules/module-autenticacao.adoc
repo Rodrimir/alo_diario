@@ -1,0 +1,15 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Registro e login de tutores, emissão de JWT e administrador inicial.
+|Base package
+|`br.com.cuida.autenticacao`
+|Bean references
+|* `b.c.c.i.jwt.TokenService` (in Infra) -- Emite JWTs HS256 com `sub` = id do usuário e `role` = papel.
+|Aggregate roots
+|* `b.c.c.a.model.Usuario` -- Usuário autenticável (tutor ou administrador).
+|Properties
+|* `app.bootstrap.admin.email` -- `java.lang.String`
+* `app.bootstrap.admin.name` -- `java.lang.String`, default `Administrador`
+* `app.bootstrap.admin.password` -- `java.lang.String`
+|===

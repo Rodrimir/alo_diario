@@ -1,0 +1,13 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Log de acesso a dados sensíveis (resumo, transcrição e áudio).
+|Base package
+|`br.com.cuida.auditoria`
+|Spring components
+|_Services_
+
+* `b.c.c.a.AuditoriaService` -- Registra e consulta quem acessou resumo, transcrição ou áudio de um idoso (API pública).
+|Aggregate roots
+|* `b.c.c.a.model.RegistroAcesso` -- Registro imutável de acesso a dado sensível. As referências viram `NULL` se o idoso for excluído (LGPD), preservando a trilha de quem acessou e quando.
+|===

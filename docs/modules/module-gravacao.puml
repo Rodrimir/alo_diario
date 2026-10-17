@@ -1,0 +1,33 @@
+@startuml
+title <size:24>Gravação</size>
+
+set separator none
+top to bottom direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Component>
+
+System_Boundary("CuidaApplication_boundary", "CuidaApplication", $tags="") {
+  Container_Boundary("CuidaApplication.CuidaApplication_boundary", "CuidaApplication", $tags="") {
+    Component(CuidaApplication.CuidaApplication.Ligação, "Ligação", $techn="Module", $descr="", $tags="", $link="")
+    Component(CuidaApplication.CuidaApplication.Gravação, "Gravação", $techn="Module", $descr="", $tags="", $link="")
+    Component(CuidaApplication.CuidaApplication.Idoso, "Idoso", $techn="Module", $descr="", $tags="", $link="")
+  }
+
+}
+
+Rel(CuidaApplication.CuidaApplication.Gravação, CuidaApplication.CuidaApplication.Idoso, "listens to", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Gravação, CuidaApplication.CuidaApplication.Ligação, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Ligação, CuidaApplication.CuidaApplication.Idoso, "uses", $techn="", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

@@ -14,13 +14,13 @@ para um MVP.
 - A conversa é delegada a um **gateway de voz com IA** (padrão: **Vapi**), que liga, conversa,
   grava e, ao fim, nos chama por **webhook** com status, motivo do encerramento, duração,
   transcrição e URL da gravação.
-- O domínio depende só da porta `VoiceCallGateway` (`startCall(CallRequest) → providerCallId`).
-  Adaptadores: `VapiVoiceCallGateway` (produção) e `MockVoiceCallGateway` (dev/test), que
+- O domínio depende só da porta `GatewayDeVoz` (`startCall(CallRequest) → providerCallId`).
+  Adaptadores: `GatewayDeVozVapi` (produção) e `GatewayDeVozSimulado` (dev/test), que
   simula a ligação e injeta o mesmo fluxo do webhook.
 - O assistente é **transitório** (montado a cada chamada) a partir das perguntas do idoso. O
   aviso de gravação vai no `firstMessage`, fixo, e não depende do LLM.
 - Como o Vapi **não envia as credenciais da organização para assistentes transitórios**, o
-  segredo do webhook vai em `assistant.server.headers` e é validado por um `WebhookVerifier`.
+  segredo do webhook vai em `assistant.server.headers` e é validado por um `VapiWebhookController`.
 - O webhook é **idempotente** (`webhook_events` com `(provider, event_id)` único). O Vapi não
   envia id de evento, então o id é derivado (`{callId}:{type}[:{status}]`).
 - `startCall` **não tem retry automático**: um POST que estoura o timeout pode já ter criado a

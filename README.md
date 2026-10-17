@@ -119,39 +119,65 @@ stateDiagram-v2
 
 ## Arquitetura
 
-O código é organizado **por funcionalidade** (package by feature). Cada subpacote de `br.com.cuida`
-é um **módulo do Spring Modulith**, com tudo de que precisa (controller, DTOs, serviço, entidade,
-repositório, eventos). As classes são package-private por padrão. Módulos se comunicam apenas por
-**serviços públicos** (a API do módulo) ou **eventos de domínio**. O build quebra se houver ciclo,
-acesso a classe interna de outro módulo ou dependência não declarada (`ModularityTests`).
+O código é organizado **por funcionalidade** (package by feature), com a mesma estrutura e os
+mesmos padrões de nome do projeto de referência `exemplos/backend` (Tempo Claro). Cada pasta de
+`br.com.cuida` é um **módulo do Spring Modulith** com nome em português e sempre o mesmo formato:
 
-| Módulo | Responsabilidade | API pública | Pode depender de |
+```
+idoso/                          ← pasta da funcionalidade
+├── IdosoController.java        ← rotas (só delega ao service)
+├── IdosoService.java           ← regras do caso de uso
+├── AcessoIdosoService.java     ← outro service da funcionalidade (ex.: checagem de acesso)
+├── IdosoRepository.java        ← Spring Data
+├── (XxxJob, PlanejadorDeXxx…)  ← jobs e classes de lógica com nome descritivo
+└── model/
+    ├── Idoso.java              ← entidade
+    ├── IdosoRequestDTO.java    ← corpo de requisição
+    ├── IdosoResponseDTO.java   ← resposta da API
+    ├── IdosoDTO.java           ← dados usados por outros módulos
+    └── IdosoCadastrado.java    ← eventos e enums
+```
+
+Adaptadores de provedores externos ficam em subpastas próprias (`ligacao/vapi`, `ligacao/mock`,
+`analise/openai`, `analise/mock`). O que é transversal fica em `infra/`, dividido como no exemplo:
+`exception/`, `jwt/`, `security/`, `doc/`, `saude/`, `util/`, além de `persistencia/`,
+`agendamento/` e `eventos/`.
+
+Módulos se comunicam apenas pelos **services públicos**, pelos tipos de `model/` (declarado como
+interface nomeada do Modulith) ou por **eventos de domínio**. Repositórios e classes de lógica são
+internos ao módulo. O build quebra se houver ciclo, acesso a classe interna de outro módulo ou
+dependência não declarada (`ModularityTests`).
+
+| Módulo | Responsabilidade | Usado por outros módulos | Pode depender de |
 |---|---|---|---|
-| `auth` | registro, login, JWT, administrador inicial | — | `shared` |
-| `elderly` | cadastro do idoso, consentimento, exclusão LGPD | `ElderlyDirectory`, `ElderlyView`, eventos `ElderlyRegistered` / `ElderlyDeleted` | `shared` |
-| `schedule` | agenda de ligações | `CallSchedules`, `ScheduleView` | `shared`, `elderly` |
-| `questionnaire` | perguntas e snapshot | `Questionnaires`, `QuestionnaireSnapshot` | `shared`, `elderly` |
-| `call` | ciclo de vida da ligação, agendador, retentativas, disparo, porta `VoiceCallGateway` (+ `vapi/`, `mock/`) | `CallQueries`, `CallProcessing`, `CallView`, `CallResponse`, evento `CallEnded` | `shared`, `elderly`, `schedule`, `questionnaire`, `webhook` |
-| `webhook` | recepção idempotente e reprocessamento | `WebhookInbox`, `WebhookEvents`, evento `WebhookReceived` | `shared` |
-| `analysis` | transcrição e resumo com IA (portas `Transcriber`/`Summarizer` + `openai/`, `mock/`) | `Transcriber`, `Summarizer` | `shared`, `call`, `recording`, `questionnaire` |
-| `recording` | armazenamento de áudio (porta `AudioStorage`: S3 ou disco), cópia da gravação, retenção | `Recordings`, `AudioContent` | `shared`, `call`, `elderly` |
-| `calendar` | leitura do tutor: calendário, detalhe, transcrição, áudio, log de acessos | — | `shared`, `call`, `elderly`, `recording`, `audit` |
-| `audit` | log de acesso a dados sensíveis | `AuditTrail` | `shared` |
-| `shared` | segurança, erros, OpenAPI, jobs, persistência, datas | tudo (módulo aberto) | nenhum |
+| `autenticacao` | registro, login, JWT, administrador inicial | — | `infra` |
+| `idoso` | cadastro do idoso, consentimento, exclusão LGPD | `AcessoIdosoService`, `model` (`IdosoDTO`, eventos `IdosoCadastrado` / `IdosoExcluido`) | `infra` |
+| `agenda` | agenda de ligações | `AgendaService`, `model` (`AgendaDTO`) | `infra`, `idoso` |
+| `questionario` | perguntas e snapshot | `QuestionarioService`, `model` (`QuestionarioSnapshot`, `TipoResposta`) | `infra`, `idoso` |
+| `ligacao` | ciclo de vida da ligação, agendador, retentativas, disparo, porta `GatewayDeVoz` (+ `vapi/`, `mock/`) | `ConsultaLigacaoService`, `ProcessamentoLigacaoService`, `model` (`LigacaoDTO`, `LigacaoResponseDTO`, evento `LigacaoEncerrada`) | `infra`, `idoso`, `agenda`, `questionario`, `webhook` |
+| `webhook` | recepção idempotente e reprocessamento | `RecebimentoWebhookService`, `EventoWebhookService`, `model` (evento `WebhookRecebido`) | `infra` |
+| `analise` | pipeline pós-ligação, transcrição e resumo com IA (portas `Transcritor`/`Resumidor` + `openai/`, `mock/`) | — | `infra`, `ligacao`, `gravacao`, `questionario` |
+| `gravacao` | armazenamento de áudio (porta `ArmazenamentoDeAudio`: S3 ou disco), cópia da gravação, retenção | `GravacaoService`, `model` (`ConteudoAudio`) | `infra`, `ligacao`, `idoso` |
+| `calendario` | leitura do tutor: calendário, detalhe, transcrição, áudio, log de acessos | — | `infra`, `ligacao`, `idoso`, `gravacao`, `auditoria` |
+| `auditoria` | log de acesso a dados sensíveis | `AuditoriaService`, `model` | `infra` |
+| `infra` | segurança, JWT, exceções, OpenAPI, jobs, persistência, utilitários | tudo (módulo aberto) | nenhum |
 
 ```mermaid
 flowchart LR
-    auth --> shared
-    elderly --> shared
-    schedule --> elderly
-    questionnaire --> elderly
-    call --> elderly & schedule & questionnaire & webhook
-    analysis --> call & recording & questionnaire
-    recording --> call & elderly
-    calendar --> call & elderly & recording & audit
-    webhook --> shared
-    audit --> shared
+    autenticacao --> infra
+    idoso --> infra
+    agenda --> idoso
+    questionario --> idoso
+    ligacao --> idoso & agenda & questionario & webhook
+    analise --> ligacao & gravacao & questionario
+    gravacao --> ligacao & idoso
+    calendario --> ligacao & idoso & gravacao & auditoria
+    webhook --> infra
+    auditoria --> infra
 ```
+
+Rotas, JSON e colunas do banco continuam em inglês: são o contrato da API e do esquema (veja
+[Padrões da API](#padrões-da-api)). A tradução vale para pastas, arquivos e classes.
 
 Os diagramas gerados pelo Modulith (PlantUML/AsciiDoc) ficam em [`docs/modules/`](docs/modules)
 e são regenerados a cada `./mvnw verify`.
@@ -161,16 +187,16 @@ por propriedade:
 
 | Porta | Adaptadores | Propriedade | Padrão |
 |---|---|---|---|
-| `VoiceCallGateway` (ligar) | `MockVoiceCallGateway`, `VapiVoiceCallGateway` | `app.voice.provider` = `mock` \| `vapi` | `mock` |
-| `AudioStorage` (guardar áudio) | `S3AudioStorage` (MinIO/AWS), `FileSystemAudioStorage` | `app.storage.provider` = `s3` \| `filesystem` | `s3` |
-| `Transcriber` / `Summarizer` (IA) | `MockTranscriber`/`MockSummarizer`, `OpenAiTranscriber`/`OpenAiSummarizer` | `app.ai.provider` = `mock` \| `openai` | `mock` |
+| `GatewayDeVoz` (ligar) | `GatewayDeVozSimulado`, `GatewayDeVozVapi` | `app.voice.provider` = `mock` \| `vapi` | `mock` |
+| `ArmazenamentoDeAudio` (guardar áudio) | `ArmazenamentoS3` (MinIO/AWS), `ArmazenamentoEmDisco` | `app.storage.provider` = `s3` \| `filesystem` | `s3` |
+| `Transcritor` / `Resumidor` (IA) | `TranscritorSimulado`/`ResumidorSimulado`, `TranscritorOpenAi`/`ResumidorOpenAi` | `app.ai.provider` = `mock` \| `openai` | `mock` |
 
 A conversa em tempo real **não** passa pelo servidor Java: ela é delegada ao gateway de voz. O
-mock não liga para ninguém; ele entrega ao `WebhookInbox` os mesmos eventos que o Vapi mandaria,
+mock não liga para ninguém; ele entrega ao `RecebimentoWebhookService` os mesmos eventos que o Vapi mandaria,
 no mesmo formato, então o caminho do webhook em diante é idêntico ao de produção.
 
-**Processamento assíncrono durável.** Os eventos entre módulos (`WebhookReceived`, `CallEnded`,
-`ElderlyDeleted`) são gravados na tabela `event_publication` na mesma transação da mudança de
+**Processamento assíncrono durável.** Os eventos entre módulos (`WebhookRecebido`, `LigacaoEncerrada`,
+`IdosoExcluido`) são gravados na tabela `event_publication` na mesma transação da mudança de
 estado (outbox do Spring Modulith). Se a aplicação cair, as publicações pendentes são reenviadas na
 inicialização e por um job a cada 5 minutos. Os eventos carregam **só ids**, nunca transcrição ou
 telefone.
@@ -277,14 +303,14 @@ e-mail inexistente). E-mail repetido no registro: `409`.
 
 | Método e rota | Corpo | Resposta |
 |---|---|---|
-| `POST /api/elderly` | `ElderlyRequest` | `ElderlyResponse` |
-| `GET /api/elderly` | — | `[ElderlyResponse]` (admin: todos; tutor: os seus), por nome |
-| `GET /api/elderly/{elderlyId}` | — | `ElderlyResponse` |
-| `PUT /api/elderly/{elderlyId}` | `ElderlyRequest` (substitui tudo) | `ElderlyResponse` |
-| `PUT /api/elderly/{elderlyId}/consent` | `{"recordingConsent": true}` | `ElderlyResponse` |
+| `POST /api/elderly` | `IdosoRequestDTO` | `IdosoResponseDTO` |
+| `GET /api/elderly` | — | `[IdosoResponseDTO]` (admin: todos; tutor: os seus), por nome |
+| `GET /api/elderly/{elderlyId}` | — | `IdosoResponseDTO` |
+| `PUT /api/elderly/{elderlyId}` | `IdosoRequestDTO` (substitui tudo) | `IdosoResponseDTO` |
+| `PUT /api/elderly/{elderlyId}/consent` | `{"recordingConsent": true}` | `IdosoResponseDTO` |
 | `DELETE /api/elderly/{elderlyId}` | — | `200` vazio. Exclusão definitiva (LGPD) |
 
-`ElderlyRequest`:
+`IdosoRequestDTO`:
 
 ```json
 {
@@ -302,7 +328,7 @@ chama a pessoa. `timezone` é um fuso IANA (padrão `America/Sao_Paulo`). `activ
 agendador parar de ligar (padrão `true`). O telefone aceita qualquer formatação; DDD + número
 ganha o DDI 55.
 
-`ElderlyResponse`:
+`IdosoResponseDTO`:
 
 ```json
 {
@@ -325,8 +351,8 @@ ganha o DDI 55.
 
 | Método | Corpo | Resposta |
 |---|---|---|
-| `GET` | — | `ScheduleResponse` |
-| `PUT` | `ScheduleRequest` | `ScheduleResponse` |
+| `GET` | — | `AgendaResponseDTO` |
+| `PUT` | `AgendaRequestDTO` | `AgendaResponseDTO` |
 
 ```json
 {
@@ -359,8 +385,8 @@ ligação no fuso do idoso, `null` se inativa):
 
 | Método | Corpo | Resposta |
 |---|---|---|
-| `GET` | — | `[QuestionnaireItemResponse]` na ordem |
-| `PUT` | `[QuestionnaireItemRequest]` (substitui a lista inteira) | `[QuestionnaireItemResponse]` |
+| `GET` | — | `[ItemQuestionarioResponseDTO]` na ordem |
+| `PUT` | `[ItemQuestionarioRequestDTO]` (substitui a lista inteira) | `[ItemQuestionarioResponseDTO]` |
 
 ```json
 [
@@ -392,11 +418,11 @@ Resposta:
 
 | Método e rota | Resposta | Observação |
 |---|---|---|
-| `POST /api/elderly/{elderlyId}/calls` | `CallResponse` | "ligar agora"; `422` sem consentimento, `409` com ligação em andamento |
-| `GET /api/elderly/{elderlyId}/calls?date=2026-10-17` | `[CallResponse]` | todas as tentativas do dia (padrão: hoje no fuso do idoso) |
-| `POST /api/calls/{callId}/reprocess` | `CallResponse` | só admin; roda o pipeline de novo (`409` se não estiver `PROCESSED`/`PROCESSING_FAILED`) |
+| `POST /api/elderly/{elderlyId}/calls` | `LigacaoResponseDTO` | "ligar agora"; `422` sem consentimento, `409` com ligação em andamento |
+| `GET /api/elderly/{elderlyId}/calls?date=2026-10-17` | `[LigacaoResponseDTO]` | todas as tentativas do dia (padrão: hoje no fuso do idoso) |
+| `POST /api/calls/{callId}/reprocess` | `LigacaoResponseDTO` | só admin; roda o pipeline de novo (`409` se não estiver `PROCESSED`/`PROCESSING_FAILED`) |
 
-`CallResponse` (ligação manual já processada):
+`LigacaoResponseDTO` (ligação manual já processada):
 
 ```json
 {
@@ -427,13 +453,13 @@ webhook chega e o pipeline termina.
 
 | Método e rota | Resposta | Auditoria |
 |---|---|---|
-| `GET /api/elderly/{elderlyId}/calendar?month=2026-10` | `[CalendarDayResponse]` (padrão: mês atual) | — |
-| `GET /api/calls/{callId}` | `CallDetailResponse` | `VIEW_SUMMARY` (se houver resumo) |
-| `GET /api/calls/{callId}/transcript` | `TranscriptResponse` (`404` se não houver) | `VIEW_TRANSCRIPT` |
+| `GET /api/elderly/{elderlyId}/calendar?month=2026-10` | `[DiaCalendarioResponseDTO]` (padrão: mês atual) | — |
+| `GET /api/calls/{callId}` | `DetalheLigacaoResponseDTO` | `VIEW_SUMMARY` (se houver resumo) |
+| `GET /api/calls/{callId}/transcript` | `TranscricaoResponseDTO` (`404` se não houver) | `VIEW_TRANSCRIPT` |
 | `GET /api/calls/{callId}/audio` | bytes do áudio (`410` se expurgado) | `PLAY_AUDIO` |
-| `GET /api/elderly/{elderlyId}/access-log` | `[AccessLogEntryResponse]` (só admin, 500 mais recentes) | — |
+| `GET /api/elderly/{elderlyId}/access-log` | `[RegistroAcessoResponseDTO]` (só admin, 500 mais recentes) | — |
 
-`CalendarDayResponse` — só dias com ligação, em ordem. Mostra a ligação mais relevante do dia (a
+`DiaCalendarioResponseDTO` — só dias com ligação, em ordem. Mostra a ligação mais relevante do dia (a
 última processada; senão, a última tentativa); `attempts` conta todas:
 
 ```json
@@ -452,7 +478,7 @@ webhook chega e o pipeline termina.
 ]
 ```
 
-`CallDetailResponse` — os campos de `CallResponse` (sem `mood`/`hasAudio`) mais o resumo completo
+`DetalheLigacaoResponseDTO` — os campos de `LigacaoResponseDTO` (sem `mood`/`hasAudio`) mais o resumo completo
 e o caminho do áudio:
 
 ```json
@@ -484,7 +510,7 @@ e o caminho do áudio:
 }
 ```
 
-`TranscriptResponse` — `source` é `PROVIDER` (veio do gateway de voz) ou `WHISPER` (nossa
+`TranscricaoResponseDTO` — `source` é `PROVIDER` (veio do gateway de voz) ou `WHISPER` (nossa
 transcrição). As falas vêm rotuladas `Assistente:` e `Idoso(a):`, uma por linha:
 
 ```json
@@ -508,7 +534,7 @@ Cache-Control: private, no-store
 
 Aceita `Range: bytes=…` de uma faixa (responde `206`), para o player poder avançar o áudio.
 
-`AccessLogEntryResponse` (horário no fuso do idoso):
+`RegistroAcessoResponseDTO` (horário no fuso do idoso):
 
 ```json
 [
@@ -619,7 +645,7 @@ termina.
    falhar mas houver transcrição, o resumo sai mesmo assim (sem áudio).
 3. Transcreve com a OpenAI se `APP_TRANSCRIPTION_MODE=WHISPER` ou se o provedor não mandou
    transcrição.
-4. Resume com **Structured Output** (JSON Schema de `CallSummary` no `response_format`). O nome da
+4. Resume com **Structured Output** (JSON Schema de `ResumoLigacao` no `response_format`). O nome da
    pessoa não vai para a IA, e a transcrição é tratada como dado, entre delimitadores.
 5. Normaliza: exatamente uma resposta por pergunta do snapshot (as que faltarem viram `NOT_ASKED`,
    chaves inventadas são descartadas), `alertReasons` vazio quando `NONE`. **Rede de segurança:**
@@ -858,7 +884,7 @@ Jobs agendados (todos com ShedLock):
   do tutor com auditoria, adaptador do Vapi (`MockRestServiceServer`), proteção contra SSRF e
   retenção, `Range` no áudio.
 - `ModularityTests` verifica os módulos e gera `docs/modules/`. `ArchitectureTests` proíbe
-  pacotes por camada técnica e qualquer dependência de `shared` para features.
+  pacotes por camada técnica e qualquer dependência de `infra` para funcionalidades.
 - A CI (`.github/workflows/ci.yml`) roda o mesmo `./mvnw verify` no Ubuntu com Java 21.
 
 ## Estrutura de pastas
@@ -873,26 +899,27 @@ Jobs agendados (todos com ShedLock):
 ├── http/                    coleção .http (IntelliJ HTTP Client), 01 a 04
 ├── src/main/java/br/com/cuida/
 │   ├── CuidaApplication.java
-│   ├── auth/                registro, login, admin inicial
-│   ├── elderly/             cadastro, consentimento, exclusão
-│   ├── schedule/            agenda
-│   ├── questionnaire/       perguntas e snapshot
-│   ├── call/                ciclo da ligação, jobs, disparo manual
-│   │   ├── vapi/            adaptador e parser do Vapi
+│   ├── autenticacao/        AuthController, AuthService, carga do admin; model/ Usuario + DTOs
+│   ├── idoso/               cadastro, consentimento, exclusão, AcessoIdosoService
+│   ├── agenda/              agenda de ligações
+│   ├── questionario/        perguntas, sugeridas e snapshot
+│   ├── ligacao/             planejador, disparador, retentativas, varredor, job, "ligar agora"
+│   │   ├── vapi/            gateway e leitor de eventos do Vapi
 │   │   └── mock/            gateway simulado
-│   ├── webhook/             inbox, reprocessamento, retenção de payload
-│   ├── analysis/            pipeline, normalização, resiliência
+│   ├── webhook/             recebimento, reprocessamento, retenção de payload
+│   ├── analise/             pipeline, normalizador de resumo, resiliência
 │   │   ├── openai/          Spring AI (resumo e transcrição)
 │   │   └── mock/            resumo e transcrição simulados
-│   ├── recording/           storage S3/disco, download, retenção
-│   ├── calendar/            leitura do tutor
-│   ├── audit/               log de acessos
-│   └── shared/              security/, web/, openapi/, config/, persistence/, time/
+│   ├── gravacao/            armazenamento S3/disco, download, retenção
+│   ├── calendario/          leitura do tutor
+│   ├── auditoria/           log de acessos
+│   └── infra/               exception/, jwt/, security/, doc/, saude/, util/,
+│                            persistencia/, agendamento/, eventos/
 ├── src/main/resources/
 │   ├── application.yml, application-{dev,prod}.yml
 │   ├── db/migration/        V1 a V5
 │   └── mock/sample-call.mp3 gravação sintética do mock
-├── src/test/java/br/com/cuida/   espelha os módulos + testsupport/
+├── src/test/java/br/com/cuida/   espelha os módulos (XxxTest unitário, XxxIT integração) + testsupport/
 ├── docker-compose.yml  Dockerfile  .env.example
 └── pom.xml
 ```
@@ -903,7 +930,7 @@ Jobs agendados (todos com ShedLock):
 
 | ADR | Decisão |
 |---|---|
-| [0001](docs/adr/0001-package-by-feature-com-spring-modulith.md) | Package by feature + Spring Modulith |
+| [0001](docs/adr/0001-package-by-feature-com-spring-modulith.md) | Package by feature + Spring Modulith, estrutura e nomes no padrão do `exemplos/backend` |
 | [0002](docs/adr/0002-gateway-de-voz-gerenciado.md) | Gateway de voz gerenciado (Vapi) atrás de uma porta |
 | [0003](docs/adr/0003-jsonb-para-resumo-estruturado.md) | JSONB para o resumo e o snapshot do questionário |
 | [0004](docs/adr/0004-jwt-stateless.md) | JWT stateless (HS256) |
@@ -950,8 +977,9 @@ está marcado com a prioridade sugerida: 🔴 alta (bloqueia uso real), 🟡 mé
 | A25 | Sem paginação | Todas as listas vêm inteiras (a do log de acessos limita a 500). | Igual ao exemplo; volumes do MVP são pequenos. |
 | A26 | Dados enviados à IA | O resumidor **não recebe o nome** da pessoa, só perguntas e transcrição (minimização). | A transcrição em si ainda contém o que foi dito. |
 | A27 | Rede de segurança do alerta | Se a fala da pessoa tiver "caí", "queda", "falta de ar", "dor no peito", "socorro" ou "me ajuda" e o modelo disser `NONE`, vira `ATTENTION`. | Preferimos falso positivo a perder uma queda. |
-| A28 | Rótulos da transcrição | `AI:`/`User:` do Vapi viram `Assistente:`/`Idoso(a):`. | Leitura mais clara para o tutor. |
+| A28 | Rótulos da transcrição | `AI:`/`Usuario:` do Vapi viram `Assistente:`/`Idoso(a):`. | Leitura mais clara para o tutor. |
 | A29 | Ligação sem relatório | Depois de 30 min vira `FAILED / NO_PROVIDER_REPORT` **sem retentativa**; um relatório atrasado ainda recupera o dia. | A pessoa pode ter atendido; ligar de novo incomodaria. |
+| A30 | Estrutura do código | Pastas, arquivos e classes **em português**, no formato do `exemplos/backend` (`Controller`/`Service`/`Repository` na raiz, `model/` com entidades e `XxxRequestDTO`/`XxxResponseDTO`, `infra/` para o transversal, exceções tipadas). **Métodos, campos e variáveis internas continuam em inglês**, e rotas/JSON/banco não mudaram. | Traduzir métodos e campos é um passo mecânico grande; podemos fazer em seguida se quiser tudo em português. |
 
 ### B. Pontos de atenção do projeto
 

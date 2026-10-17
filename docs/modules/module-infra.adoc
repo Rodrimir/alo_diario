@@ -1,0 +1,24 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Infraestrutura transversal: segurança, JWT, exceções, documentação, persistência, agendamento, eventos e utilitários.  
++
+Módulo aberto (todas as classes podem ser usadas pelas funcionalidades), mas sem nenhuma dependência de funcionalidade: `allowedDependencies = {`}.
+|Base package
+|`br.com.cuida.infra`
+|Spring components
+|_Configuration properties_
+
+* `b.c.c.i.jwt.JwtProperties` -- Configuração do JWT (HS256).
+
+_Others_
+
+* `b.c.c.i.jwt.CustomJwtAuthenticationConverter` -- Converte o claim `role` do token na authority `ROLE_<PAPEL>` do Spring Security.
+* `b.c.c.i.jwt.TokenService` -- Emite JWTs HS256 com `sub` = id do usuário e `role` = papel.
+* `b.c.c.i.security.UsuarioLogadoService` -- Lê o usuário autenticado do contexto do Spring Security.
+|Properties
+|* `app.security.jwt.allow-random-secret` -- `java.lang.Boolean`, default `false`. se `true` (só no perfil dev), gera um segredo aleatório quando `secret` está vazio
+* `app.security.jwt.issuer` -- `java.lang.String`, default `cuida`. valor do claim `iss`
+* `app.security.jwt.secret` -- `java.lang.String`. segredo com pelo menos 32 bytes (`JWT_SECRET`)
+* `app.security.jwt.ttl` -- `java.time.Duration`, default `PT1H`. validade do token (`JWT_TTL`, padrão 1h)
+|===

@@ -1,14 +1,16 @@
 [%autowidth.stretch, cols="h,a"]
 |===
 |Description
-|Recepção idempotente de webhooks dos provedores (inbox em `webhook_events`).
+|Recepção idempotente de webhooks dos provedores (gravados antes de processar).
 |Base package
 |`br.com.cuida.webhook`
 |Spring components
 |_Services_
 
-* `b.c.c.w.WebhookEvents` -- API pública do módulo para quem processa os webhooks: lê o payload e registra o resultado.
-* `b.c.c.w.WebhookInbox` -- Porta de entrada dos webhooks (API pública do módulo): grava o evento e publica `b.c.c.w.WebhookReceived` na mesma transação. Um evento repetido (mesmo provedor e id) é reconhecido e descartado, inclusive quando duas entregas chegam ao mesmo tempo.
+* `b.c.c.w.EventoWebhookService` -- API pública do módulo para quem processa os webhooks: lê o payload e registra o resultado.
+* `b.c.c.w.RecebimentoWebhookService` -- Porta de entrada dos webhooks (API pública do módulo): grava o evento e publica `b.c.c.w.model.WebhookRecebido` na mesma transação. Um evento repetido (mesmo provedor e id) é reconhecido e descartado, inclusive quando duas entregas chegam ao mesmo tempo.
+|Aggregate roots
+|* `b.c.c.w.model.EventoWebhook` -- Evento de webhook recebido de um provedor, gravado <b>antes</b> de ser processado (nada se perde se a aplicação cair no meio). O par `(provider, event_id)` é único e garante a idempotência. O `payload` é apagado assim que o processamento termina (LGPD: contém transcrição e telefone).
 |Properties
 |* `app.webhook.vapi.secret` -- `java.lang.String`. valor esperado no header (`VAPI_WEBHOOK_SECRET`); vazio = todo webhook é recusado
 * `app.webhook.vapi.secret-header` -- `java.lang.String`, default `X-Webhook-Secret`. nome do header (o mesmo enviado em `assistant.server.headers`)

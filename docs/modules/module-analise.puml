@@ -1,0 +1,37 @@
+@startuml
+title <size:24>Análise</size>
+
+set separator none
+top to bottom direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Component>
+
+System_Boundary("CuidaApplication_boundary", "CuidaApplication", $tags="") {
+  Container_Boundary("CuidaApplication.CuidaApplication_boundary", "CuidaApplication", $tags="") {
+    Component(CuidaApplication.CuidaApplication.Ligação, "Ligação", $techn="Module", $descr="", $tags="", $link="")
+    Component(CuidaApplication.CuidaApplication.Gravação, "Gravação", $techn="Module", $descr="", $tags="", $link="")
+    Component(CuidaApplication.CuidaApplication.Análise, "Análise", $techn="Module", $descr="", $tags="", $link="")
+    Component(CuidaApplication.CuidaApplication.Questionário, "Questionário", $techn="Module", $descr="", $tags="", $link="")
+  }
+
+}
+
+Rel(CuidaApplication.CuidaApplication.Análise, CuidaApplication.CuidaApplication.Gravação, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Análise, CuidaApplication.CuidaApplication.Ligação, "listens to", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Análise, CuidaApplication.CuidaApplication.Ligação, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Análise, CuidaApplication.CuidaApplication.Questionário, "depends on", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Gravação, CuidaApplication.CuidaApplication.Ligação, "uses", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Ligação, CuidaApplication.CuidaApplication.Questionário, "uses", $techn="", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

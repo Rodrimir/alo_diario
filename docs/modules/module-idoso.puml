@@ -1,0 +1,30 @@
+@startuml
+title <size:24>Idoso</size>
+
+set separator none
+top to bottom direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Component>
+
+System_Boundary("CuidaApplication_boundary", "CuidaApplication", $tags="") {
+  Container_Boundary("CuidaApplication.CuidaApplication_boundary", "CuidaApplication", $tags="") {
+    Component(CuidaApplication.CuidaApplication.Infra, "Infra", $techn="Module", $descr="", $tags="", $link="")
+    Component(CuidaApplication.CuidaApplication.Idoso, "Idoso", $techn="Module", $descr="", $tags="", $link="")
+  }
+
+}
+
+Rel(CuidaApplication.CuidaApplication.Idoso, CuidaApplication.CuidaApplication.Infra, "uses", $techn="", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

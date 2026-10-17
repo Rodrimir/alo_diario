@@ -1,0 +1,19 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Agenda de ligações de cada pessoa idosa (horário local, dias da semana, retentativas).
+|Base package
+|`br.com.cuida.agenda`
+|Spring components
+|_Services_
+
+* `b.c.c.a.AgendaService` -- Agenda do idoso: leitura e edição pelo tutor, e agendas ativas para o agendador de ligações.
+|Bean references
+|* `b.c.c.i.AcessoIdosoService` (in Idoso) -- API pública do módulo para os demais: consulta de idosos e checagem de acesso.  
++
+Idoso de outro tutor responde 404 (não 403), para não revelar que ele existe.
+|Aggregate roots
+|* `b.c.c.a.model.Agenda` -- Agenda diária de ligações de uma pessoa idosa (uma por idoso).
+|Events listened to
+|* `b.c.c.i.model.IdosoCadastrado` -- Todo idoso nasce com uma agenda desligada (9h, todos os dias).
+|===
