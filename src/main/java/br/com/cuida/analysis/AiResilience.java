@@ -24,12 +24,19 @@ public class AiResilience {
   private final CircuitBreaker circuitBreaker;
 
   AiResilience() {
+    this(Duration.ofSeconds(2));
+  }
+
+  /**
+   * @param initialWait espera antes da 2ª tentativa (dobra a cada tentativa)
+   */
+  AiResilience(Duration initialWait) {
     this.retry =
         Retry.of(
             "ai",
             RetryConfig.custom()
                 .maxAttempts(3)
-                .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(2), 2))
+                .intervalFunction(IntervalFunction.ofExponentialBackoff(initialWait, 2))
                 .retryOnException(AiResilience::isRetryable)
                 .build());
     this.circuitBreaker =

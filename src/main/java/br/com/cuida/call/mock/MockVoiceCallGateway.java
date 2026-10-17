@@ -31,6 +31,7 @@ import tools.jackson.databind.json.JsonMapper;
 class MockVoiceCallGateway implements VoiceCallGateway {
 
   static final String PROVIDER = "mock";
+  static final int DURATION_SECONDS = 95;
 
   private static final Logger log = LoggerFactory.getLogger(MockVoiceCallGateway.class);
 
@@ -66,8 +67,9 @@ class MockVoiceCallGateway implements VoiceCallGateway {
       throw new VoiceCallException("falha simulada ao discar");
     }
     String providerCallId = "mock-" + UUID.randomUUID();
+    Instant startedAt = clock.instant();
     executor.schedule(
-        () -> deliver(call, providerCallId, scenario),
+        () -> deliver(call, providerCallId, scenario, startedAt),
         properties.delay().toMillis(),
         TimeUnit.MILLISECONDS);
     return new StartedCall(providerCallId);
@@ -78,12 +80,15 @@ class MockVoiceCallGateway implements VoiceCallGateway {
     executor.shutdownNow();
   }
 
-  private void deliver(OutboundCall call, String providerCallId, MockScenario scenario) {
+  /** A conversa simulada dura {@value #DURATION_SECONDS} s a partir do disparo. */
+  private void deliver(
+      OutboundCall call, String providerCallId, MockScenario scenario, Instant startedAt) {
     try {
       Map<String, Object> callNode =
           Map.of("id", providerCallId, "metadata", Map.of("callId", call.callId().toString()));
-      Instant endedAt = clock.instant();
-      if (scenario == MockScenario.NORMAL || scenario == MockScenario.URGENT) {
+      boolean answered = scenario == MockScenario.NORMAL || scenario == MockScenario.URGENT;
+      Instant endedAt = answered ? startedAt.plusSeconds(DURATION_SECONDS) : startedAt;
+      if (answered) {
         send(
             providerCallId + ":status-update:in-progress",
             "status-update",
@@ -93,21 +98,25 @@ class MockVoiceCallGateway implements VoiceCallGateway {
                 "status",
                 "in-progress",
                 "timestamp",
-                endedAt.minusSeconds(95).toEpochMilli(),
+                startedAt.toEpochMilli(),
                 "call",
                 callNode));
       }
       send(
           providerCallId + ":end-of-call-report",
           "end-of-call-report",
-          report(call, callNode, scenario, endedAt));
+          report(call, callNode, scenario, startedAt, endedAt));
     } catch (RuntimeException e) {
       log.error("Falha ao entregar webhook simulado da ligação {}", call.callId(), e);
     }
   }
 
   private Map<String, Object> report(
-      OutboundCall call, Map<String, Object> callNode, MockScenario scenario, Instant endedAt) {
+      OutboundCall call,
+      Map<String, Object> callNode,
+      MockScenario scenario,
+      Instant startedAt,
+      Instant endedAt) {
     Map<String, Object> message = new LinkedHashMap<>();
     message.put("type", "end-of-call-report");
     message.put("call", callNode);
@@ -123,8 +132,8 @@ class MockVoiceCallGateway implements VoiceCallGateway {
       }
       default -> {
         message.put("endedReason", "assistant-ended-call");
-        message.put("startedAt", endedAt.minusSeconds(95).toString());
-        message.put("durationSeconds", 95.4);
+        message.put("startedAt", startedAt.toString());
+        message.put("durationSeconds", DURATION_SECONDS + 0.4);
         message.put(
             "artifact",
             Map.of(

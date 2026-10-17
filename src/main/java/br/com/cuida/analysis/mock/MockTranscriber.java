@@ -14,7 +14,7 @@ class MockTranscriber implements Transcriber {
     return """
         Assistente: Olá! Aqui é a Cuida. Esta ligação é gravada. Podemos conversar um pouquinho?
         Idoso(a): Pode sim.
-        Assistente: Como a pessoa dormiu esta noite?
+        Assistente: Como dormiu esta noite?
         Idoso(a): Dormi bem.
         Assistente: Obrigada pela conversa! Até amanhã.
         Idoso(a): Até amanhã.""";

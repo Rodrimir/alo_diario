@@ -87,6 +87,21 @@ app:
     provider: ${APP_VOICE_PROVIDER:mock}
     mock:
       delay: ${APP_VOICE_MOCK_DELAY:PT3S}
+    vapi:
+      api-key: ${VAPI_API_KEY:}
+      phone-number-id: ${VAPI_PHONE_NUMBER_ID:}
+      webhook-base-url: ${VAPI_WEBHOOK_BASE_URL:}
+      webhook-secret: ${VAPI_WEBHOOK_SECRET:}
+      model:
+        provider: ${VAPI_MODEL_PROVIDER:openai}
+        model: ${VAPI_MODEL:gpt-4o}
+      voice:
+        provider: ${VAPI_VOICE_PROVIDER:azure}
+        voice-id: ${VAPI_VOICE_ID:pt-BR-FranciscaNeural}
+      transcriber:
+        provider: ${VAPI_TRANSCRIBER_PROVIDER:deepgram}
+        model: ${VAPI_TRANSCRIBER_MODEL:nova-2}
+        language: ${VAPI_TRANSCRIBER_LANGUAGE:pt-BR}
   webhook:
     vapi:
       # Segredo enviado pelo Vapi em assistant.server.headers. Vazio = webhook recusado.
@@ -108,6 +123,9 @@ app:
       allowed-hosts: ${APP_RECORDING_ALLOWED_HOSTS:storage.vapi.ai,*.vapi.ai}
       # classpath: só faz sentido com o gateway mock (gravação de exemplo).
       allow-classpath: ${APP_RECORDING_ALLOW_CLASSPATH:false}
+  retention:
+    audio-days: ${APP_RETENTION_AUDIO_DAYS:90}
+    webhook-payload-days: ${APP_RETENTION_WEBHOOK_PAYLOAD_DAYS:7}
   ai:
     # mock (padrão, sem chave) | openai
     provider: ${APP_AI_PROVIDER:mock}

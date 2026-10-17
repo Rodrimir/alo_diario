@@ -9,9 +9,9 @@ final class DefaultQuestions {
 
   static final List<Question> ITEMS =
       List.of(
-          new Question("sleep", "Como a pessoa dormiu esta noite?", AnswerType.FREE_TEXT),
+          new Question("sleep", "Como dormiu esta noite?", AnswerType.FREE_TEXT),
           new Question("medication", "Tomou os remédios de hoje?", AnswerType.YES_NO),
-          new Question("meals", "Já se alimentou hoje? O que comeu?", AnswerType.FREE_TEXT),
+          new Question("meals", "Já comeu hoje? O que comeu?", AnswerType.FREE_TEXT),
           new Question("pain", "Está sentindo alguma dor? De 1 a 5, quanto?", AnswerType.SCALE_1_5),
           new Question("mood", "Como está se sentindo hoje?", AnswerType.FREE_TEXT),
           new Question(

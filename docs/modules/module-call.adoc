@@ -17,6 +17,9 @@ _Configuration properties_
 _Others_
 
 * `b.c.c.c.VoiceCallGateway` (via `b.c.c.c.mock.MockVoiceCallGateway` -- Gateway de voz simulado (padrão no dev e nos testes). Não liga para ninguém: depois de `app.voice.mock.delay`, entrega ao `b.c.c.w.WebhookInbox` os mesmos eventos que o Vapi mandaria (`status-update` e `end-of-call-report`), no mesmo formato. Assim, o fluxo do webhook em diante é exatamente o de produção.)
+* `b.c.c.c.VoiceCallGateway` (via `b.c.c.c.vapi.VapiVoiceCallGateway` -- Liga pelo Vapi (`POST /call`) com um assistente <b>transitório</b>, montado a cada ligação com as perguntas do idoso. Como o Vapi não envia as credenciais da organização para assistentes transitórios, o segredo do webhook vai em `assistant.server.headers`.  
++
+Sem retry (um POST que estourou o tempo pode já ter criado a ligação); só circuit breaker, para não insistir quando o Vapi está fora do ar.)
 |Bean references
 |* `b.c.c.e.ElderlyDirectory` (in Elderly) -- API pública do módulo para os demais: consulta de idosos e checagem de acesso.  
 +
@@ -35,4 +38,19 @@ Idoso de outro tutor responde 404 (não 403), para não revelar que ele existe.
 * `app.calls.stuck-after` -- `java.time.Duration`, default `PT30M`. sem relatório do provedor depois disso, a ligação é dada como falha
 * `app.voice.mock.delay` -- `java.time.Duration`, default `PT3S`. tempo entre o disparo e a entrega dos webhooks simulados
 * `app.voice.mock.recording-url` -- `java.lang.String`, default `classpath:mock/sample-call.mp3`. gravação de exemplo "devolvida" pelo provedor (áudio sintético)
+* `app.voice.vapi.api-key` -- `java.lang.String`. chave privada da API (`VAPI_API_KEY`)
+* `app.voice.vapi.base-url` -- `java.lang.String`, default `https://api.vapi.ai`
+* `app.voice.vapi.model.model` -- `java.lang.String`, default `gpt-4o`
+* `app.voice.vapi.model.provider` -- `java.lang.String`, default `openai`
+* `app.voice.vapi.model.temperature` -- `java.lang.Double`, default `0.4`
+* `app.voice.vapi.phone-number-id` -- `java.lang.String`. número de saída cadastrado no Vapi (`VAPI_PHONE_NUMBER_ID`)
+* `app.voice.vapi.timeout` -- `java.time.Duration`, default `PT15S`
+* `app.voice.vapi.transcriber.language` -- `java.lang.String`, default `pt-BR`
+* `app.voice.vapi.transcriber.model` -- `java.lang.String`, default `nova-2`
+* `app.voice.vapi.transcriber.provider` -- `java.lang.String`, default `deepgram`
+* `app.voice.vapi.voice.provider` -- `java.lang.String`, default `azure`
+* `app.voice.vapi.voice.voice-id` -- `java.lang.String`, default `pt-BR-FranciscaNeural`
+* `app.voice.vapi.webhook-base-url` -- `java.lang.String`. URL pública deste backend; o webhook vai para `/webhook/vapi`
+* `app.voice.vapi.webhook-secret` -- `java.lang.String`. segredo enviado no header do webhook (mesmo `VAPI_WEBHOOK_SECRET`)
+* `app.voice.vapi.webhook-secret-header` -- `java.lang.String`, default `X-Webhook-Secret`. nome do header (o mesmo validado pelo módulo webhook)
 |===

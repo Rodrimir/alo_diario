@@ -1,7 +1,7 @@
 [%autowidth.stretch, cols="h,a"]
 |===
 |Description
-|Pipeline pós-ligação: copia a gravação, transcreve (se preciso) e gera o resumo estruturado (portas `b.c.c.a.Transcriber`/`b.c.c.a.Summarizer` com adaptadores OpenAI e mock).
+|Pipeline pós-ligação: copia a gravação, transcreve (se preciso) e gera o resumo estruturado (portas `b.c.c.c.vapi.VapiProperties.Transcriber`/`b.c.c.a.Summarizer` com adaptadores OpenAI e mock).
 |Base package
 |`br.com.cuida.analysis`
 |Spring components

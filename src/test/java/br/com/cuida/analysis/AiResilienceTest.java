@@ -3,6 +3,7 @@ package br.com.cuida.analysis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
@@ -10,7 +11,7 @@ class AiResilienceTest {
 
   @Test
   void retriesTransientFailuresUpToThreeTimes() {
-    AiResilience resilience = new AiResilience();
+    AiResilience resilience = new AiResilience(Duration.ofMillis(10));
     AtomicInteger calls = new AtomicInteger();
 
     String result =
@@ -28,7 +29,7 @@ class AiResilienceTest {
 
   @Test
   void givesUpAfterThreeAttempts() {
-    AiResilience resilience = new AiResilience();
+    AiResilience resilience = new AiResilience(Duration.ofMillis(10));
     AtomicInteger calls = new AtomicInteger();
 
     assertThatThrownBy(

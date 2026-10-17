@@ -24,5 +24,8 @@ Spring Security 7.1, Jackson 3.1, Flyway 12, Testcontainers 2.0 e JUnit 6.
 - Diferenças em relação ao briefing: Hibernate **7** e Security **7**. `@JdbcTypeCode(SqlTypes.JSON)`
   continua igual, e o Hibernate 7.4 já traz `Jackson3JsonFormatMapper`.
 - Starters do Boot 4 são modulares (`spring-boot-starter-webmvc`, `-flyway`, `-webmvc-test`…).
-- Ecossistema mais novo. Se alguma integração quebrar (ex.: Resilience4j), o plano B é
-  configurar o Resilience4j core programaticamente, sem o starter.
+- Ecossistema mais novo. O plano B virou a decisão: o Resilience4j é usado **programaticamente**
+  (core, sem o starter `resilience4j-spring-boot4`), e os modelos do Spring AI são montados à mão
+  (sem `spring-ai-starter-model-openai`), para que nada da OpenAI seja criado sem chave.
+- No Boot 4 o `RestClient.Builder` autoconfigurado fica em um starter próprio
+  (`spring-boot-restclient`); o adaptador do Vapi cria o seu `RestClient` diretamente.

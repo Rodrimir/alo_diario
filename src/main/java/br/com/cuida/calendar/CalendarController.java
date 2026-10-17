@@ -4,6 +4,7 @@ import br.com.cuida.call.CallResponse;
 import br.com.cuida.shared.web.ClientIp;
 import br.com.cuida.shared.web.InvalidRequestException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -70,13 +71,33 @@ class CalendarController {
                 .build()
                 .toString())
         .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
-        .body(new InputStreamResource(audio.content().stream()));
+        .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+        .body(new SizedStreamResource(audio.content().stream(), audio.content().contentLength()));
   }
 
   /** Quem acessou resumo, transcrição e áudio do idoso. Só administrador. */
   @GetMapping("/api/elderly/{elderlyId}/access-log")
   List<AccessLogEntryResponse> accessLog(@PathVariable UUID elderlyId) {
     return service.accessLog(elderlyId);
+  }
+
+  /**
+   * Stream com tamanho conhecido: o Spring usa o tamanho para responder {@code Range} (206) sem ler
+   * o stream duas vezes. Só uma faixa por requisição, que é o que os players pedem.
+   */
+  static class SizedStreamResource extends InputStreamResource {
+
+    private final long length;
+
+    SizedStreamResource(InputStream stream, long length) {
+      super(stream);
+      this.length = length;
+    }
+
+    @Override
+    public long contentLength() {
+      return length;
+    }
   }
 
   private static YearMonth parseMonth(String month) {

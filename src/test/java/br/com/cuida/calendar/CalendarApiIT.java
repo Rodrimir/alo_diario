@@ -114,6 +114,28 @@ class CalendarApiIT {
   }
 
   @Test
+  void audioSupportsSingleRangeRequests() {
+    MvcTestResult partial =
+        mvc.get()
+            .uri("/api/calls/{id}/audio", callId)
+            .header("Authorization", "Bearer " + token)
+            .header("Range", "bytes=0-99")
+            .exchange();
+
+    assertThat(partial).hasStatus(HttpStatus.PARTIAL_CONTENT);
+    assertThat(partial.getResponse().getContentAsByteArray()).hasSize(100);
+
+    MvcTestResult open =
+        mvc.get()
+            .uri("/api/calls/{id}/audio", callId)
+            .header("Authorization", "Bearer " + token)
+            .header("Range", "bytes=0-")
+            .exchange();
+    assertThat(open).hasStatus(HttpStatus.PARTIAL_CONTENT);
+    assertThat(open.getResponse().getContentAsByteArray()).hasSize(23840);
+  }
+
+  @Test
   void otherTutorGetsNotFoundForEverything() {
     String other = api.newTutorToken();
 
