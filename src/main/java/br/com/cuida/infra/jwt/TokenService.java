@@ -2,7 +2,9 @@ package br.com.cuida.infra.jwt;
 
 import br.com.cuida.infra.security.PapelUsuario;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
@@ -38,5 +40,24 @@ public class TokenService {
     JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
     String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
     return new TokenEmitido(token, jwtProperties.ttl().toSeconds());
+  }
+
+  /**
+   * Token curto para a IA de voz chamar o servidor MCP durante uma ligação. Só vale em {@code /mcp}
+   * (audiência {@value ClaimsJwt#AUDIENCE_MCP}) e só para esta ligação.
+   */
+  public String emitirTokenDeLigacao(UUID callId, Duration validade) {
+    Instant now = clock.instant();
+    JwtClaimsSet claims =
+        JwtClaimsSet.builder()
+            .issuer(jwtProperties.issuer())
+            .subject("call:" + callId)
+            .audience(List.of(ClaimsJwt.AUDIENCE_MCP))
+            .issuedAt(now)
+            .expiresAt(now.plus(validade))
+            .claim(ClaimsJwt.CALL_ID, callId.toString())
+            .build();
+    JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
+    return encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
   }
 }

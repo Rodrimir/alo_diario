@@ -114,6 +114,18 @@ public class Ligacao extends EntidadeAuditavel {
   @Column(name = "failure_reason", length = 200)
   private String failureReason;
 
+  /** Alerta sinalizado pela IA durante a ligação (ferramenta {@code sinalizar_alerta}). */
+  @Enumerated(EnumType.STRING)
+  @Column(name = "realtime_alert_level", length = 20)
+  private NivelAlerta realtimeAlertLevel;
+
+  @Column(name = "realtime_alert_reason", length = 300)
+  private String realtimeAlertReason;
+
+  /** A IA concluiu as perguntas (ferramenta {@code concluir_conversa}). */
+  @Column(name = "conversation_completed_at")
+  private Instant conversationCompletedAt;
+
   /** Esta tentativa já foi avaliada e não gera outra (retentativa criada ou encerrada). */
   @Column(name = "retry_closed", nullable = false)
   private boolean retryClosed;
@@ -152,6 +164,40 @@ public class Ligacao extends EntidadeAuditavel {
         new Ligacao(elderlyId, OrigemLigacao.SCHEDULED, scheduledFor, localDate, 1, null);
     call.fail(failureReason, scheduledFor);
     return call;
+  }
+
+  /**
+   * Registra o alerta da ligação; só sobe de nível (ATTENTION → URGENT), nunca desce.
+   *
+   * @return {@code true} se virou URGENT agora (para avisar a família uma única vez)
+   */
+  public boolean registrarAlerta(NivelAlerta nivel, String motivo) {
+    if (nivel == NivelAlerta.NONE
+        || (realtimeAlertLevel == NivelAlerta.URGENT)
+        || (realtimeAlertLevel == NivelAlerta.ATTENTION && nivel == NivelAlerta.ATTENTION)) {
+      return false;
+    }
+    this.realtimeAlertLevel = nivel;
+    this.realtimeAlertReason = truncate(motivo, 300);
+    return nivel == NivelAlerta.URGENT;
+  }
+
+  public void concluirConversa(Instant at) {
+    if (conversationCompletedAt == null) {
+      conversationCompletedAt = at;
+    }
+  }
+
+  public NivelAlerta getRealtimeAlertLevel() {
+    return realtimeAlertLevel;
+  }
+
+  public String getRealtimeAlertReason() {
+    return realtimeAlertReason;
+  }
+
+  public Instant getConversationCompletedAt() {
+    return conversationCompletedAt;
   }
 
   /** Marca que esta tentativa não gera outra: o planejador de retentativas não a olha mais. */

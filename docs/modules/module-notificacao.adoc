@@ -26,8 +26,8 @@ Idoso de outro tutor responde 404 (não 403), para não revelar que ele existe.
 |Aggregate roots
 |* `b.c.c.n.model.Notificacao` -- Um aviso à família. A `dedupKey` única garante que o mesmo aviso não seja enviado duas vezes, mesmo com o evento reprocessado pelo outbox.
 |Events listened to
-|* `b.c.c.l.model.LigacaoProcessada` (async) 
-* `b.c.c.l.model.TentativasEsgotadas` (async) 
+|* `b.c.c.l.model.TentativasEsgotadas` (async) 
+* `b.c.c.l.model.LigacaoProcessada` (async) 
 |Properties
 |* `app.notifications.provider` -- `java.lang.String`, default `mock`. `mock` (padrão: só registra no log) ou `whatsapi`
 * `app.notifications.templates.alerta` -- `java.lang.String`, default `alo_diario_alerta`

@@ -7,6 +7,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -89,7 +90,8 @@ public class Notificacao extends EntidadeAuditavel {
     this.recipient = recipient;
     this.template = Objects.requireNonNull(template, "template");
     this.content = Objects.requireNonNull(content, "content");
-    this.variables = Map.copyOf(variables);
+    // LinkedHashMap: a ordem dos parâmetros é a que vai para a Meta, inclusive no reenvio.
+    this.variables = new LinkedHashMap<>(variables);
     this.dedupKey = Objects.requireNonNull(dedupKey, "dedupKey");
   }
 

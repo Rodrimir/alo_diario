@@ -5,6 +5,7 @@ target/
 hs_err_pid*
 replay_pid*
 .mvn/wrapper/maven-wrapper.jar
+/exemplos
 
 # --- Segredos / configuração local -------------------------------------------
 .env

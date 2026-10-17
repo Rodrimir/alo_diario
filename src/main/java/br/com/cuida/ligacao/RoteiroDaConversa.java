@@ -6,9 +6,11 @@ import br.com.cuida.ligacao.model.PedidoDeLigacao;
 import br.com.cuida.questionario.model.QuestionarioSnapshot;
 import br.com.cuida.questionario.model.TipoResposta;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 /**
@@ -20,10 +22,15 @@ class RoteiroDaConversa {
 
   private final LigacaoProperties ligacaoProperties;
   private final Clock clock;
+  private final ObjectProvider<ProvedorDeContexto> provedorDeContexto;
 
-  RoteiroDaConversa(LigacaoProperties ligacaoProperties, Clock clock) {
+  RoteiroDaConversa(
+      LigacaoProperties ligacaoProperties,
+      Clock clock,
+      ObjectProvider<ProvedorDeContexto> provedorDeContexto) {
     this.ligacaoProperties = ligacaoProperties;
     this.clock = clock;
+    this.provedorDeContexto = provedorDeContexto;
   }
 
   PedidoDeLigacao outboundCall(Ligacao call, IdosoDTO elderly) {
@@ -36,9 +43,22 @@ class RoteiroDaConversa {
         elderly.phoneNumber(),
         elderly.nameForConversation(),
         firstMessage(elderly),
-        systemPrompt(elderly, questionnaire),
+        instrucoes(call, elderly, questionnaire),
         questionnaire,
         ligacaoProperties.maxDurationSeconds());
+  }
+
+  /**
+   * Com o módulo MCP presente, as instruções vêm das três camadas de contexto (regras base, skills
+   * da pessoa e pedidos da família); sem ele, das instruções padrão abaixo.
+   */
+  private String instrucoes(Ligacao call, IdosoDTO elderly, QuestionarioSnapshot questionnaire) {
+    ProvedorDeContexto provedor = provedorDeContexto.getIfAvailable();
+    if (provedor == null) {
+      return systemPrompt(elderly, questionnaire);
+    }
+    return provedor.montar(
+        call.getId(), elderly, questionnaire, LocalDate.ofInstant(clock.instant(), elderly.zone()));
   }
 
   String firstMessage(IdosoDTO elderly) {

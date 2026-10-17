@@ -13,6 +13,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.beans.factory.support.StaticListableBeanFactory;
 
 class RoteiroDaConversaTest {
 
@@ -37,7 +38,11 @@ class RoteiroDaConversaTest {
     // 13:30 UTC = 10:30 em São Paulo (bom dia), mas 09:30 em Nova York também (bom dia) e 22:30 em
     // Tóquio (boa noite).
     Clock clock = Clock.fixed(Instant.parse("2026-10-17T13:30:00Z"), ZoneOffset.UTC);
-    RoteiroDaConversa roteiro = new RoteiroDaConversa(PROPERTIES, clock);
+    RoteiroDaConversa roteiro =
+        new RoteiroDaConversa(
+            PROPERTIES,
+            clock,
+            new StaticListableBeanFactory().getBeanProvider(ProvedorDeContexto.class));
 
     String saoPaulo = roteiro.firstMessage(elderly("America/Sao_Paulo"));
     String tokyo = roteiro.firstMessage(elderly("Asia/Tokyo"));
