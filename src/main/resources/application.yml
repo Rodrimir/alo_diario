@@ -43,6 +43,24 @@ spring:
     virtual:
       enabled: false
 
+springdoc:
+  # Desligado por padrão (inclusive em produção); o perfil dev liga com SWAGGER_ENABLED=true.
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
+    persist-authorization: true
+
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:}
+      ttl: ${JWT_TTL:PT1H}
+  bootstrap:
+    admin:
+      email: ${APP_BOOTSTRAP_ADMIN_EMAIL:}
+      password: ${APP_BOOTSTRAP_ADMIN_PASSWORD:}
+
 server:
   port: ${SERVER_PORT:8080}
   shutdown: graceful

@@ -1,20 +1,14 @@
 package br.com.cuida.auth;
 
 import br.com.cuida.shared.persistence.AuditableEntity;
-import jakarta.persistence.CollectionTable;
+import br.com.cuida.shared.security.UserRole;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 /** Usuário autenticável (tutor ou administrador). */
@@ -32,21 +26,19 @@ class User extends AuditableEntity {
   @Column(name = "password_hash", nullable = false, length = 100)
   private String passwordHash;
 
-  @ElementCollection(fetch = FetchType.EAGER)
-  @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
   @Enumerated(EnumType.STRING)
-  @Column(name = "role", nullable = false, length = 30)
-  private Set<Role> roles = new HashSet<>();
+  @Column(nullable = false, length = 20)
+  private UserRole role;
 
   /** Exigido pelo JPA. */
   protected User() {}
 
-  User(String name, String email, String passwordHash, Set<Role> roles) {
+  User(String name, String email, String passwordHash, UserRole role) {
     super(UUID.randomUUID());
-    this.name = Objects.requireNonNull(name, "name");
+    this.name = Objects.requireNonNull(name, "name").trim();
     this.email = normalizeEmail(email);
     this.passwordHash = Objects.requireNonNull(passwordHash, "passwordHash");
-    this.roles = new HashSet<>(roles);
+    this.role = Objects.requireNonNull(role, "role");
   }
 
   static String normalizeEmail(String email) {
@@ -65,7 +57,7 @@ class User extends AuditableEntity {
     return passwordHash;
   }
 
-  Set<Role> getRoles() {
-    return Collections.unmodifiableSet(roles);
+  UserRole getRole() {
+    return role;
   }
 }

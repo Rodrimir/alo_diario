@@ -17,15 +17,14 @@ public final class TestFixtures {
     UUID id = UUID.randomUUID();
     Timestamp now = Timestamp.from(Instant.now());
     jdbc.update(
-        "insert into users (id, name, email, password_hash, created_at, updated_at)"
-            + " values (?, ?, ?, ?, ?, ?)",
+        "insert into users (id, name, email, password_hash, role, created_at, updated_at)"
+            + " values (?, ?, ?, ?, 'TUTOR', ?, ?)",
         id,
         "Tutor de Teste",
         "tutor-" + id + "@teste.local",
-        "{bcrypt}placeholder",
+        "$2a$10$placeholderplaceholderplaceholderplaceholderplacehold",
         now,
         now);
-    jdbc.update("insert into user_roles (user_id, role) values (?, 'ROLE_TUTOR')", id);
     return id;
   }
 

@@ -30,7 +30,7 @@ System_Boundary("CuidaApplication_boundary", "CuidaApplication", $tags="") {
 }
 
 Rel(CuidaApplication.CuidaApplication.Audit, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")
-Rel(CuidaApplication.CuidaApplication.Auth, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")
+Rel(CuidaApplication.CuidaApplication.Auth, CuidaApplication.CuidaApplication.Shared, "uses", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Questionnaire, "depends on", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Call, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")
 Rel(CuidaApplication.CuidaApplication.Elderly, CuidaApplication.CuidaApplication.Shared, "depends on", $techn="", $tags="", $link="")

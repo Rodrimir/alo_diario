@@ -8,3 +8,12 @@ logging:
     root: WARN
     br.com.cuida: INFO
     org.flywaydb: WARN
+
+app:
+  security:
+    jwt:
+      secret: segredo-de-teste-com-pelo-menos-32-bytes-0123456789
+  bootstrap:
+    admin:
+      email: admin@teste.local
+      password: admin-de-teste-123

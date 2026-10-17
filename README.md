@@ -15,7 +15,7 @@ gerais e nível de alerta), a **transcrição completa** e o **áudio** da liga�
 | Fase | Conteúdo | Status |
 |---|---|---|
 | 1 | Fundação: projeto, módulos, Flyway, Testcontainers, CI | ✅ |
-| 2 | Segurança (JWT, RBAC, ownership) e erros (ProblemDetail), Swagger | ⏳ |
+| 2 | Segurança (JWT, papéis, ownership), formato de erros, Swagger | ✅ |
 | 3 | Cadastros: idosos, agenda, questionário, consentimento | ⏳ |
 | 4 | Agendamento e telefonia (mock), ShedLock, retentativas, webhook idempotente | ⏳ |
 | 5 | Pipeline de IA e áudio (S3/MinIO, transcrição, resumo, Resilience4j) | ⏳ |
