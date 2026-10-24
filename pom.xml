@@ -26,7 +26,7 @@
         <spring-modulith.version>2.1.1</spring-modulith.version>
         <!-- Mesmo valor gerenciado pelo Spring Boot 4.1.1; importado explicitamente para centralizar. -->
         <testcontainers.version>2.0.5</testcontainers.version>
-        <aws-sdk.version>2.56.0</aws-sdk.version>
+        <aws-sdk.version>2.57.1</aws-sdk.version>
 
         <!-- Bibliotecas de apoio -->
         <springdoc.version>3.1.1</springdoc.version>
