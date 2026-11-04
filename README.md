@@ -1,5 +1,31 @@
 # Cuida — backend
 
+> Serviço que liga todos os dias para pessoas idosas que moram sozinhas, conversa por voz com IA,
+> transcreve a ligação e entrega um resumo ao familiar responsável.
+
+## O projeto
+
+O **Alô Diário** nasceu no **Techstars Startup Weekend Pelotas 2026**, em outubro de 2026. O problema
+que o time escolheu atacar: 5,6 milhões de pessoas idosas moram sozinhas no Brasil, e seus filhos se
+preocupam mas não conseguem ligar todo dia.
+
+Em 54 horas o time validou a ideia com 83 respostas de formulário, 36 entrevistas de rua, 15 ligações
+de teste e 5 vendas fechadas antes da apresentação final. Este repositório é o **backend** construído
+durante esse fim de semana.
+
+## Quem fez
+
+Backend desenvolvido por **Rodrigo Miranda da Silva** ([@Rodrimir](https://github.com/Rodrimir)),
+como parte de um time de sete pessoas no Techstars Startup Weekend Pelotas 2026.
+
+## Stack
+
+Java com Spring Boot, PostgreSQL com migrações Flyway, Docker, autenticação JWT com controle de
+propriedade por papel, testes de integração com Testcontainers, agendamento distribuído com ShedLock
+e integração contínua no GitHub Actions.
+
+---
+
 Backend do MVP de **monitoramento conversacional diário de pessoas idosas**. O sistema liga todos
 os dias para a pessoa idosa, conversa por voz com IA, grava, transcreve, gera um resumo estruturado
 e mostra tudo ao **tutor** (filho, sobrinho, cuidador) em um **calendário**.
