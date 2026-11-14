@@ -40,7 +40,7 @@ services:
   # MC_HOST_local e o container reinicia até o MinIO aceitar conexões.
   minio-init:
     # cgr.dev/chainguard/minio-client:latest
-    image: cgr.dev/chainguard/minio-client@sha256:d8a93c5d335509ff353774eefec8f82fa2a2a975e800139702232d8be3dbe6b9
+    image: cgr.dev/chainguard/minio-client@sha256:bc7114870a7a8abed5b881f9aef648c8142e558ec1f8e1e7f604d66797981645
     depends_on:
       - minio
     environment:
